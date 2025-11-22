@@ -1,0 +1,17 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+uv.lock
+
+# Temporary test files
+*_report.json
+raw_report.json
+adapted_report.json
+
+# Python
+*.py[cod]
+*$py.class
+.Python
