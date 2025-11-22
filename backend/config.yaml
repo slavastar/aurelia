@@ -1,0 +1,103 @@
+skin_color:
+  - option: "Fair"
+    weight: 0.2
+  - option: "Medium"
+    weight: 0.4
+  - option: "Olive"
+    weight: 0.2
+  - option: "Brown"
+    weight: 0.15
+  - option: "Black"
+    weight: 0.05
+
+alcohol_habit:
+  - option: "Never"
+    weight: 0.3
+  - option: "Socially"
+    weight: 0.5
+  - option: "Moderate"
+    weight: 0.15
+  - option: "Heavy"
+    weight: 0.05
+
+smoking_habit:
+  - option: "Never"
+    weight: 0.6
+  - option: "Occasionally"
+    weight: 0.27
+  - option: "Regularly"
+    weight: 0.10
+  - option: "Heavy"
+    weight: 0.03
+
+children_count:
+  - option: 0
+    weight: 0.25
+  - option: 1
+    weight: 0.25
+  - option: 2
+    weight: 0.30
+  - option: 3
+    weight: 0.15
+  - option: 4
+    weight: 0.04
+  - option: 5
+    weight: 0.01
+
+country:
+  - option: "USA"
+    weight: 0.3
+  - option: "UK"
+    weight: 0.1
+  - option: "France"
+    weight: 0.1
+  - option: "Germany"
+    weight: 0.1
+  - option: "Japan"
+    weight: 0.05
+  - option: "China"
+    weight: 0.1
+  - option: "India"
+    weight: 0.1
+  - option: "Brazil"
+    weight: 0.05
+  - option: "Nigeria"
+    weight: 0.05
+  - option: "Australia"
+    weight: 0.05
+
+profession:
+  - option: "Teacher"
+    weight: 0.1
+  - option: "Nurse"
+    weight: 0.1
+  - option: "Engineer"
+    weight: 0.1
+  - option: "Manager"
+    weight: 0.15
+  - option: "Salesperson"
+    weight: 0.1
+  - option: "Artist"
+    weight: 0.05
+  - option: "Doctor"
+    weight: 0.05
+  - option: "Lawyer"
+    weight: 0.05
+  - option: "Accountant"
+    weight: 0.05
+  - option: "Homemaker"
+    weight: 0.1
+  - option: "Retired"
+    weight: 0.15
+
+family_revenues:
+  - option: "Low"
+    weight: 0.2
+  - option: "Lower-Middle"
+    weight: 0.25
+  - option: "Middle"
+    weight: 0.3
+  - option: "Upper-Middle"
+    weight: 0.2
+  - option: "High"
+    weight: 0.05
