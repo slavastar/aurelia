@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { put } from '@vercel/blob';
+import { writeFile, mkdir } from 'fs/promises';
+import path from 'path';
 import { extractTextFromDocument } from '@/lib/pixtral/client';
 import { validateBiomarkers } from '@/lib/pixtral/biomarker-parser';
 import { generateAureliaAnalysis } from '@/lib/mistral/client';
@@ -59,14 +61,30 @@ export async function POST(request: NextRequest) {
       });
       console.log('File uploaded to Vercel Blob:', blob.url);
     } else {
-      // Mock mode for development without Vercel Blob
-      blob = {
-        url: `mock://uploads/${file.name}`,
-        pathname: file.name,
-        contentType: file.type,
-        contentDisposition: `attachment; filename="${file.name}"`,
-      };
-      console.log('Mock mode: File not uploaded (no BLOB_READ_WRITE_TOKEN)');
+      // Local development mode - save locally
+      const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+      try {
+        await mkdir(uploadDir, { recursive: true });
+        const filePath = path.join(uploadDir, file.name);
+        await writeFile(filePath, buffer);
+        console.log('Local Dev: File saved to', filePath);
+        
+        blob = {
+          url: `/uploads/${file.name}`,
+          pathname: file.name,
+          contentType: file.type,
+          contentDisposition: `attachment; filename="${file.name}"`,
+        };
+      } catch (err) {
+        console.error('Error saving local file:', err);
+        // Fallback if local save fails
+        blob = {
+          url: `local://${file.name}`,
+          pathname: file.name,
+          contentType: file.type,
+          contentDisposition: `attachment; filename="${file.name}"`,
+        };
+      }
     }
 
     // Extract text using Pixtral OCR
@@ -99,35 +117,67 @@ export async function POST(request: NextRequest) {
         Return ONLY a JSON object with the following structure:
         {
           "biomarkers": {
-            "TestName": number
+            "HbA1c": number | null,
+            "Ferritin": number | null,
+            "CRP": number | null,
+            "TSH": number | null,
+            "VitaminD": number | null,
+            "VitaminB12": number | null,
+            "Glucose": number | null,
+            "Hemoglobin": number | null,
+            "WBC": number | null,
+            "Platelets": number | null,
+            "Creatinine": number | null,
+            "Potassium": number | null,
+            "Troponin": number | null,
+            "T3": number | null,
+            "T4": number | null,
+            "FreeT3": number | null,
+            "FreeT4": number | null,
+            "TotalCholesterol": number | null,
+            "LDL": number | null,
+            "HDL": number | null,
+            "Triglycerides": number | null,
+            "ApoB": number | null,
+            "ALT": number | null,
+            "AST": number | null,
+            "Estrogen": number | null,
+            "Progesterone": number | null,
+            "Testosterone": number | null,
+            "Cortisol": number | null,
+            "Calcium": number | null,
+            "Magnesium": number | null,
+            "Zinc": number | null
           },
           "parsed": [
             { "name": "TestName", "value": number, "unit": "string", "confidence": 0.9 }
           ]
         }
 
-        Rules:
-        1. Map French or English test names to these standard keys:
-           - HbA1c (Glycated Hemoglobin, Hémoglobine Glyquée)
-           - Ferritin (Ferritine)
-           - CRP (C-Reactive Protein, Protéine C-Réactive)
-           - TSH (Thyroid Stimulating Hormone)
-           - VitaminD (Vitamine D, 25-OH Vitamin D)
-           - VitaminB12 (Vitamine B12, Cobalamin)
-           - Glucose (Glycémie, Fasting Glucose)
-           - Hemoglobin (Hémoglobine)
-           - TotalCholesterol (Cholestérol Total)
-           - LDL (LDL Cholesterol)
-           - HDL (HDL Cholesterol)
-           - Triglycerides (Triglycérides)
-           - ALT (ALAT, SGPT)
-           - AST (ASAT, SGOT)
-           - Iron (Fer)
-
-        2. Extract ONLY the numeric value. If a value is given as a range or with units, extract only the number.
-        3. If a value is comma-separated (e.g. 5,7), convert it to dot-separated (5.7).
-        4. Do not include units in the value, only the number.
-        5. Return valid JSON only. No markdown formatting.`,
+        STRICT RULES:
+        1.  **NO MOCK DATA**: If a value is not explicitly present in the text, DO NOT invent it. Omit the key or set it to null.
+        2.  **NO HALLUCINATIONS**: Only extract what is there.
+        3.  **FORMAT**: Return ONLY valid JSON. No markdown code blocks, no explanations.
+        4.  **MAPPING**: Map French or English test names to the standard keys listed above.
+            - HbA1c (Glycated Hemoglobin, Hémoglobine Glyquée)
+            - Ferritin (Ferritine)
+            - CRP (C-Reactive Protein, Protéine C-Réactive)
+            - TSH (Thyroid Stimulating Hormone)
+            - VitaminD (Vitamine D, 25-OH Vitamin D)
+            - VitaminB12 (Vitamine B12, Cobalamin)
+            - Glucose (Glycémie, Fasting Glucose)
+            - Hemoglobin (Hémoglobine)
+            - TotalCholesterol (Cholestérol Total)
+            - LDL (LDL Cholesterol)
+            - HDL (HDL Cholesterol)
+            - Triglycerides (Triglycérides)
+            - ALT (ALAT, SGPT)
+            - AST (ASAT, SGOT)
+            - Iron (Fer) -> Map to "Iron" if needed, but prefer specific keys.
+        5.  **VALUES**: Extract ONLY the numeric value.
+            - If a value is comma-separated (e.g. 5,7), convert it to dot-separated (5.7).
+            - Do not include units in the value field.
+        6.  **UNITS**: Extract the unit if available and put it in the "parsed" array objects.`,
         userMessage: `Extract biomarkers from this text:\n\n${extractedText}`,
         complexity: 'complex'
       });

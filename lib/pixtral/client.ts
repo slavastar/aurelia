@@ -99,6 +99,59 @@ Bilirubin: 0.6 mg/dL (Normal: 0.1-1.2)
 }
 
 /**
+ * Helper to call Pixtral API for a single image buffer
+ */
+async function callPixtralAPI(imageBuffer: Buffer, apiKey: string): Promise<string> {
+  const base64Data = imageBuffer.toString('base64');
+  const apiEndpoint = process.env.PIXTRAL_API_ENDPOINT || 'https://api.mistral.ai/v1/chat/completions';
+  
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 mins per chunk
+
+  try {
+    const response = await fetch(apiEndpoint, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'pixtral-12b-2409',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: 'Transcribe all text from this document exactly as it appears. Do not summarize, do not extract specific fields, and do not translate yet. Just give me the raw text content including all numbers, units, and labels.',
+              },
+              {
+                type: 'image_url',
+                image_url: `data:image/jpeg;base64,${base64Data}`,
+              },
+            ],
+          },
+        ],
+      }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Pixtral API error: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content || '';
+  } catch (error) {
+      clearTimeout(timeoutId);
+      throw error;
+  }
+}
+
+/**
  * Extract text from document (PDF or Image) using Pixtral OCR
  */
 export async function extractTextFromDocument(
@@ -112,92 +165,64 @@ export async function extractTextFromDocument(
   }
 
   try {
-    // Resize image if it's too large to prevent timeouts
-    let processedBuffer = fileBuffer;
-    try {
-      const metadata = await sharp(fileBuffer).metadata();
-      if (metadata.width && metadata.width > 2048) {
-        console.log('Resizing large image for OCR...');
-        processedBuffer = await sharp(fileBuffer)
-          .resize(2048, null, { withoutEnlargement: true })
-          .jpeg({ quality: 80 })
-          .toBuffer();
-      } else {
-        // Convert to JPEG to ensure compatibility and reduce size
-        processedBuffer = await sharp(fileBuffer)
-          .jpeg({ quality: 80 })
-          .toBuffer();
-      }
-    } catch (sharpError) {
-      console.warn('Image processing failed, using original buffer:', sharpError);
+    // 1. Pre-process: Resize width to max 2048 to ensure manageable width
+    let baseImage = sharp(fileBuffer);
+    const metadata = await baseImage.metadata();
+    
+    if (metadata.width && metadata.width > 2048) {
+        baseImage = baseImage.resize(2048, null, { withoutEnlargement: true });
+    }
+    
+    // Get updated metadata after resize
+    const processedBuffer = await baseImage.toBuffer();
+    const updatedMetadata = await sharp(processedBuffer).metadata();
+    const height = updatedMetadata.height || 0;
+    
+    let extractedText = '';
+    
+    // 2. Split if too tall (e.g. > 2048px)
+    // We use a slightly smaller chunk size to be safe
+    const CHUNK_HEIGHT = 2048; 
+    
+    if (height > CHUNK_HEIGHT) {
+        console.log(`Image height ${height} exceeds limit. Splitting into chunks...`);
+        const chunks: Buffer[] = [];
+        
+        for (let y = 0; y < height; y += CHUNK_HEIGHT) {
+            const extractHeight = Math.min(CHUNK_HEIGHT, height - y);
+            const chunk = await sharp(processedBuffer)
+                .extract({ left: 0, top: y, width: updatedMetadata.width!, height: extractHeight })
+                .jpeg({ quality: 80 })
+                .toBuffer();
+            chunks.push(chunk);
+        }
+        
+        console.log(`Split into ${chunks.length} chunks. Processing...`);
+        
+        // Process chunks sequentially to avoid rate limits and keep order
+        for (let i = 0; i < chunks.length; i++) {
+            console.log(`Processing chunk ${i + 1}/${chunks.length}...`);
+            const chunkText = await callPixtralAPI(chunks[i], apiKey);
+            extractedText += `\n--- Page ${i + 1} ---\n` + chunkText;
+        }
+        
+    } else {
+        // Process single image
+        const finalBuffer = await baseImage.jpeg({ quality: 80 }).toBuffer();
+        extractedText = await callPixtralAPI(finalBuffer, apiKey);
     }
 
-    // Convert buffer to base64
-    const base64Data = processedBuffer.toString('base64');
-
-    // Note: The actual Pixtral API endpoint may differ
-    // This is a placeholder - update with real endpoint when available
-    const apiEndpoint = process.env.PIXTRAL_API_ENDPOINT || 'https://api.mistral.ai/v1/chat/completions';
-
-    // Create an AbortController for timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 600000); // 10 minutes timeout
-
-    try {
-      const response = await fetch(apiEndpoint, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
+    return {
+      text: extractedText,
+      confidence: 0.85,
+      pages: [
+        {
+          page_number: 1,
+          text: extractedText,
+          confidence: 0.85,
         },
-        body: JSON.stringify({
-          model: 'pixtral-12b-2409',
-          messages: [
-            {
-              role: 'user',
-              content: [
-                {
-                  type: 'text',
-                  text: 'Transcribe all text from this document exactly as it appears. Do not summarize, do not extract specific fields, and do not translate yet. Just give me the raw text content including all numbers, units, and labels.',
-                },
-                {
-                  type: 'image_url',
-                  image_url: `data:image/jpeg;base64,${base64Data}`,
-                },
-              ],
-            },
-          ],
-        }),
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Pixtral API error: ${response.status} ${response.statusText} - ${errorText}`);
-      }
-
-      const data = await response.json();
-
-      // Transform Pixtral response to our format
-      const extractedText = data.choices?.[0]?.message?.content || '';
-
-      return {
-        text: extractedText,
-        confidence: 0.85,
-        pages: [
-          {
-            page_number: 1,
-            text: extractedText,
-            confidence: 0.85,
-          },
-        ],
-      };
-    } catch (fetchError) {
-      clearTimeout(timeoutId);
-      throw fetchError;
-    }
+      ],
+    };
 
   } catch (error) {
     console.error('Pixtral OCR extraction error:', error);
