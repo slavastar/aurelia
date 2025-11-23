@@ -104,7 +104,7 @@ Bilirubin: 0.6 mg/dL (Normal: 0.1-1.2)
 async function callPixtralAPI(imageBuffer: Buffer, apiKey: string): Promise<string> {
   const base64Data = imageBuffer.toString('base64');
   const apiEndpoint = process.env.PIXTRAL_API_ENDPOINT || 'https://api.mistral.ai/v1/chat/completions';
-  
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 mins per chunk
 
@@ -168,26 +168,26 @@ export async function extractTextFromDocument(
     // 1. Pre-process: Resize width to max 2048 to ensure manageable width
     let baseImage = sharp(fileBuffer);
     const metadata = await baseImage.metadata();
-    
+
     if (metadata.width && metadata.width > 2048) {
         baseImage = baseImage.resize(2048, null, { withoutEnlargement: true });
     }
-    
+
     // Get updated metadata after resize
     const processedBuffer = await baseImage.toBuffer();
     const updatedMetadata = await sharp(processedBuffer).metadata();
     const height = updatedMetadata.height || 0;
-    
+
     let extractedText = '';
-    
+
     // 2. Split if too tall (e.g. > 2048px)
     // We use a slightly smaller chunk size to be safe
-    const CHUNK_HEIGHT = 2048; 
-    
+    const CHUNK_HEIGHT = 2048;
+
     if (height > CHUNK_HEIGHT) {
         console.log(`Image height ${height} exceeds limit. Splitting into chunks...`);
         const chunks: Buffer[] = [];
-        
+
         for (let y = 0; y < height; y += CHUNK_HEIGHT) {
             const extractHeight = Math.min(CHUNK_HEIGHT, height - y);
             const chunk = await sharp(processedBuffer)
@@ -196,16 +196,16 @@ export async function extractTextFromDocument(
                 .toBuffer();
             chunks.push(chunk);
         }
-        
+
         console.log(`Split into ${chunks.length} chunks. Processing...`);
-        
+
         // Process chunks sequentially to avoid rate limits and keep order
         for (let i = 0; i < chunks.length; i++) {
             console.log(`Processing chunk ${i + 1}/${chunks.length}...`);
             const chunkText = await callPixtralAPI(chunks[i], apiKey);
             extractedText += `\n--- Page ${i + 1} ---\n` + chunkText;
         }
-        
+
     } else {
         // Process single image
         const finalBuffer = await baseImage.jpeg({ quality: 80 }).toBuffer();

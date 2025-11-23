@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
         const filePath = path.join(uploadDir, file.name);
         await writeFile(filePath, buffer);
         console.log('Local Dev: File saved to', filePath);
-        
+
         blob = {
           url: `/uploads/${file.name}`,
           pathname: file.name,
