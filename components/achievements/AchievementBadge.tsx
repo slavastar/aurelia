@@ -1,15 +1,11 @@
 'use client';
 
-import { Achievement, getRarityColor, getRarityTextColor, getRarityBgColor } from '@/lib/achievements/definitions';
+import { Achievement, DisplayAchievement, getRarityColor, getRarityTextColor, getRarityBgColor } from '@/lib/achievements/definitions';
 import { Lock, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface AchievementBadgeProps {
-  achievement: Achievement & {
-    isUnlocked: boolean;
-    unlockedAt?: Date;
-    progress?: { current: number; max: number } | null;
-  };
+  achievement: DisplayAchievement;
   size?: 'small' | 'medium' | 'large';
   showProgress?: boolean;
   onClick?: () => void;

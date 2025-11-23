@@ -53,8 +53,16 @@ export default function Home() {
       {/* Features Section */}
       <section id="features" className="container mx-auto px-4 py-20">
         <div className="max-w-6xl mx-auto">
-                    <h3 className="text-3xl font-bold text-center mb-12 text-white">
-            Why Choose AURELIA?
+                    <h3 className="text-3xl font-bold text-center mb-12 text-white flex items-center justify-center gap-3">
+            Why Choose
+            <Image
+              src="/logo.svg"
+              alt="Aurelia"
+              width={160}
+              height={48}
+              className="h-10 w-auto object-contain"
+            />
+            ?
           </h3>
           
           <div className="grid md:grid-cols-3 gap-8">
@@ -170,11 +178,10 @@ export default function Home() {
             <Image 
               src="/logo.svg" 
               alt="Aurelia Logo" 
-              width={16} 
-              height={16} 
-              className="h-4 w-4 object-contain"
+              width={120} 
+              height={36} 
+              className="h-8 w-auto object-contain"
             />
-            <span className="font-semibold text-white">AURELIA</span>
           </div>
           <p className="text-sm text-white/60 text-center">
             © 2024 AURELIA. Not medical advice. Consult healthcare professionals for medical decisions.

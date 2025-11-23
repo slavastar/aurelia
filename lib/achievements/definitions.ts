@@ -17,6 +17,12 @@ export interface Achievement {
   unlockedAt?: Date;
 }
 
+export type DisplayAchievement = Omit<Achievement, 'progress'> & {
+  isUnlocked: boolean;
+  unlockedAt?: Date;
+  progress?: { current: number; max: number } | null;
+};
+
 export interface UserAchievementData {
   totalAnalyses: number;
   consecutiveDays: number;

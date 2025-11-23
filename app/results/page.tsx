@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Biomarkers, QuestionnaireData } from '@/types';
 import HealthScoreGauge from '@/components/results/HealthScoreGauge';
 import BiomarkerChart from '@/components/results/BiomarkerChart';
@@ -241,12 +242,14 @@ export default function ResultsPage() {
       
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-5xl font-bold gradient-aurelia-text-lime mb-4">
-              Your AURELIA Analysis
+                    <div className="text-center mb-12">
+            <h1 className="text-5xl font-bold gradient-aurelia-text-lime mb-4 flex items-center justify-center gap-3">
+              Your
+              <Image src="/logo.svg" alt="Aurelia" width={200} height={60} className="h-14 w-auto" />
+              Analysis
             </h1>
-            <p className="text-xl text-white/60">
-              Personalized insights for your healthspan journey
+            <p className="text-xl text-white/80">
+              Based on your blood work and questionnaire
             </p>
           </div>
 
@@ -317,7 +320,10 @@ export default function ResultsPage() {
         <div className="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl shadow-xl p-8 mb-8">
           <div className="flex items-center gap-3 mb-6">
             <Heart className="w-8 h-8 text-aurelia-lime" />
-            <h2 className="text-2xl font-bold text-white">AURELIA Personalized Analysis</h2>
+            <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+              <Image src="/logo.svg" alt="Aurelia" width={120} height={36} className="h-8 w-auto" />
+              Personalized Analysis
+            </h2>
           </div>
           
           <div className="prose prose-invert prose-lg max-w-none">

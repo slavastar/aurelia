@@ -1,16 +1,12 @@
 'use client';
 
-import { Achievement, getRarityBgColor, getRarityTextColor } from '@/lib/achievements/definitions';
+import { Achievement, DisplayAchievement, getRarityBgColor, getRarityTextColor } from '@/lib/achievements/definitions';
 import AchievementBadge from './AchievementBadge';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
 
 interface AchievementCardProps {
-  achievement: Achievement & {
-    isUnlocked: boolean;
-    unlockedAt?: Date;
-    progress?: { current: number; max: number } | null;
-  };
+  achievement: DisplayAchievement;
 }
 
 export default function AchievementCard({ achievement }: AchievementCardProps) {
