@@ -108,6 +108,7 @@ export default function ResultsPage() {
             cycle_status: cycleStatus,
             symptoms: symptoms,
             goals: questionnaire.goals || questionnaire.primaryGoals,
+            face_photo: questionnaire.facePhoto, // Base64 string
             lifestyle: {
               sleep_hours: questionnaire.sleepHours,
               exercise_frequency: questionnaire.workoutFreq, // Mapped

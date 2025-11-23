@@ -74,11 +74,31 @@ export async function POST(request: NextRequest) {
 
     let analysisResult;
     try {
-      const pythonResponse = await fetch(`${baseUrl}/api/generate-report`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(healthProfile)
-      });
+      let pythonResponse;
+      
+      if (context.face_photo) {
+        // If photo exists, use the photo endpoint with multipart/form-data
+        const formData = new FormData();
+        formData.append('profile', JSON.stringify(healthProfile));
+        
+        // Convert base64 to blob
+        const base64Data = context.face_photo.split(',')[1];
+        const binaryData = Buffer.from(base64Data, 'base64');
+        const blob = new Blob([binaryData], { type: 'image/jpeg' });
+        formData.append('face_photo', blob, 'face.jpg');
+
+        pythonResponse = await fetch(`${baseUrl}/api/generate-report-with-photo`, {
+          method: 'POST',
+          body: formData,
+        });
+      } else {
+        // Standard JSON endpoint
+        pythonResponse = await fetch(`${baseUrl}/api/generate-report`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(healthProfile)
+        });
+      }
 
       if (pythonResponse.ok) {
         const data = await pythonResponse.json();

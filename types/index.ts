@@ -117,6 +117,7 @@ export interface UserContext {
     medications?: string[];
     allergies?: string[];
   };
+  face_photo?: string; // Base64 string
 }
 
 // ============================================================================

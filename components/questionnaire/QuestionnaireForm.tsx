@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, ArrowLeft, Check, AlertCircle, ChevronRight } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Check, AlertCircle, ChevronRight, Upload, Camera } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // Types for the form data
@@ -40,6 +40,7 @@ export type QuestionnaireData = {
   goals: string[];
   resultPreference: string;
   otherInfo: string;
+  facePhoto?: string; // Base64 string
 };
 
 const initialData: QuestionnaireData = {
@@ -75,6 +76,7 @@ const initialData: QuestionnaireData = {
   goals: [],
   resultPreference: '',
   otherInfo: '',
+  facePhoto: '',
 };
 
 export default function QuestionnaireForm() {
@@ -91,7 +93,7 @@ export default function QuestionnaireForm() {
 
   const handleNext = () => {
     if (validateStep(step)) {
-      if (step === 7) {
+      if (step === 8) {
         // Save data to localStorage
         if (typeof window !== 'undefined') {
           localStorage.setItem('aurelia_questionnaire_data', JSON.stringify(formData));
@@ -127,6 +129,22 @@ export default function QuestionnaireForm() {
         return { ...prev, [field]: [...current, value] };
       }
     });
+  };
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError("File size too large. Please upload a photo under 5MB.");
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        updateField('facePhoto', reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const validateStep = (currentStep: number): boolean => {
@@ -846,11 +864,75 @@ export default function QuestionnaireForm() {
               </div>
             )}
 
+            {/* Step 7: Face Analysis (Optional) */}
             {step === 7 && (
-              <div className="space-y-12">
-                <div className="space-y-2">
-                  <h2 className="text-3xl font-bold text-aurelia-lime">Goals & Expectations</h2>
-                  <p className="text-white/60">Last step to personalize your plan.</p>
+              <div className="max-w-2xl mx-auto">
+                <div className="mb-8">
+                  <h2 className="text-3xl font-bold text-aurelia-lime">Face Analysis (Optional)</h2>
+                  <p className="text-white/60 mt-2">
+                    Upload a selfie to estimate your biological skin age. This helps us provide more personalized skincare and longevity recommendations.
+                  </p>
+                </div>
+
+                <div className="space-y-8">
+                  <div className="flex flex-col items-center justify-center border-2 border-dashed border-white/20 rounded-2xl p-12 hover:border-aurelia-lime/50 transition-colors bg-white/5">
+                    {formData.facePhoto ? (
+                      <div className="relative w-full max-w-sm aspect-square rounded-xl overflow-hidden mb-4">
+                        <img 
+                          src={formData.facePhoto} 
+                          alt="Selfie preview" 
+                          className="w-full h-full object-cover"
+                        />
+                        <button 
+                          onClick={() => updateField('facePhoto', '')}
+                          className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="w-20 h-20 bg-aurelia-lime/20 rounded-full flex items-center justify-center mb-6">
+                          <Camera className="w-10 h-10 text-aurelia-lime" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-white mb-2">Upload a Selfie</h3>
+                        <p className="text-white/50 text-center mb-6 max-w-xs">
+                          Ensure good lighting and no makeup for best results. Your photo is processed securely and not stored.
+                        </p>
+                        <label className="cursor-pointer bg-aurelia-lime text-aurelia-purple px-8 py-3 rounded-full font-semibold hover:bg-aurelia-accent transition shadow-lg">
+                          Choose Photo
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            className="hidden" 
+                            onChange={handlePhotoUpload}
+                          />
+                        </label>
+                      </>
+                    )}
+                  </div>
+                  
+                  <div className="bg-white/5 p-6 rounded-xl border border-white/10">
+                    <h4 className="font-semibold text-white mb-2 flex items-center gap-2">
+                      <AlertCircle className="w-5 h-5 text-aurelia-lime" />
+                      Privacy Note
+                    </h4>
+                    <p className="text-sm text-white/60">
+                      Your photo is used solely for biological age estimation during this session. It is processed by our AI model and then immediately discarded. We do not store your photos.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 9: Goals & Preferences */}
+            {step === 8 && (
+              <div className="max-w-2xl mx-auto">
+                <div className="mb-8">
+                  <h2 className="text-3xl font-bold text-aurelia-lime">Goals & Preferences</h2>
+                  <p className="text-white/60 mt-2">
+                    Tell us what you want to achieve and how you'd like to receive your results.
+                  </p>
                 </div>
 
                 <div className="space-y-8">
@@ -955,8 +1037,8 @@ export default function QuestionnaireForm() {
                 onClick={handleNext}
                 className="flex items-center gap-2 bg-aurelia-lime text-aurelia-purple px-6 py-3 rounded-full font-medium hover:bg-aurelia-accent transition-colors shadow-lg hover:shadow-xl"
               >
-                {step === 7 ? 'Finish' : 'Next'}
-                {step !== 7 && <ChevronRight className="w-5 h-5" />}
+                {step === 8 ? 'Finish' : 'Next'}
+                {step !== 8 && <ChevronRight className="w-5 h-5" />}
               </button>
             </div>
           )}
