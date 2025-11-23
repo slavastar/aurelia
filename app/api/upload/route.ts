@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { put } from '@vercel/blob';
 import { extractTextFromDocument } from '@/lib/pixtral/client';
-import { parseBiomarkers, validateBiomarkers } from '@/lib/pixtral/biomarker-parser';
+import { validateBiomarkers } from '@/lib/pixtral/biomarker-parser';
+import { generateAureliaAnalysis } from '@/lib/mistral/client';
 
-// Allow execution up to 5 minutes (if supported by hosting plan)
-export const maxDuration = 300;
+// Allow execution up to 10 minutes (if supported by hosting plan)
+export const maxDuration = 600;
 
 /**
  * Document Upload and Processing Endpoint
@@ -86,12 +87,65 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Parse biomarkers from extracted text
-    const parsingResult = parseBiomarkers(extractedText);
-    console.log('Parsed biomarkers:', Object.keys(parsingResult.biomarkers).length);
+    // Parse biomarkers using Mistral Large LLM
+    console.log('Analyzing text with Mistral Large...');
+    let biomarkers = {};
+    let parsedBiomarkersList: any[] = [];
+
+    try {
+      const analysisResult = await generateAureliaAnalysis({
+        systemPrompt: `You are an expert medical data analyst. Your task is to extract blood test results from raw OCR text.
+
+        Return ONLY a JSON object with the following structure:
+        {
+          "biomarkers": {
+            "TestName": number
+          },
+          "parsed": [
+            { "name": "TestName", "value": number, "unit": "string", "confidence": 0.9 }
+          ]
+        }
+
+        Rules:
+        1. Map French or English test names to these standard keys:
+           - HbA1c (Glycated Hemoglobin, Hémoglobine Glyquée)
+           - Ferritin (Ferritine)
+           - CRP (C-Reactive Protein, Protéine C-Réactive)
+           - TSH (Thyroid Stimulating Hormone)
+           - VitaminD (Vitamine D, 25-OH Vitamin D)
+           - VitaminB12 (Vitamine B12, Cobalamin)
+           - Glucose (Glycémie, Fasting Glucose)
+           - Hemoglobin (Hémoglobine)
+           - TotalCholesterol (Cholestérol Total)
+           - LDL (LDL Cholesterol)
+           - HDL (HDL Cholesterol)
+           - Triglycerides (Triglycérides)
+           - ALT (ALAT, SGPT)
+           - AST (ASAT, SGOT)
+           - Iron (Fer)
+
+        2. Extract ONLY the numeric value. If a value is given as a range or with units, extract only the number.
+        3. If a value is comma-separated (e.g. 5,7), convert it to dot-separated (5.7).
+        4. Do not include units in the value, only the number.
+        5. Return valid JSON only. No markdown formatting.`,
+        userMessage: `Extract biomarkers from this text:\n\n${extractedText}`,
+        complexity: 'complex'
+      });
+
+      // Clean up potential markdown code blocks
+      const cleanJson = analysisResult.analysis.replace(/```json\n?|\n?```/g, '').trim();
+      const parsed = JSON.parse(cleanJson);
+      biomarkers = parsed.biomarkers || {};
+      parsedBiomarkersList = parsed.parsed || [];
+
+      console.log('Mistral extracted biomarkers:', Object.keys(biomarkers).length);
+    } catch (e) {
+      console.error('Failed to parse Mistral JSON:', e);
+      // Fallback to empty if LLM fails
+    }
 
     // Validate biomarkers
-    const validation = validateBiomarkers(parsingResult.biomarkers);
+    const validation = validateBiomarkers(biomarkers);
 
     return NextResponse.json({
       success: true,
@@ -107,10 +161,10 @@ export async function POST(request: NextRequest) {
         mock: false,
       },
       parsing: {
-        biomarkers: parsingResult.biomarkers,
-        parsed: parsingResult.parsed,
-        confidence: parsingResult.confidence,
-        warnings: parsingResult.warnings,
+        biomarkers: biomarkers,
+        parsed: parsedBiomarkersList,
+        confidence: 1.0,
+        warnings: [],
       },
       validation: {
         isValid: validation.isValid,

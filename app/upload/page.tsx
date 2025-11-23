@@ -192,7 +192,7 @@ export default function UploadPage() {
   });
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-aurelia-purple-dark text-white">
       <Header showNav={false} />
       <div className="py-12 px-4">
         <div className="max-w-4xl mx-auto">

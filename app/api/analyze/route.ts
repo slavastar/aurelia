@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     const baseUrl = isVercel
       ? `https://${process.env.VERCEL_URL}`
       : 'http://localhost:8000'; // Default to local python server
-    
+
     const apiPath = isVercel ? '/api/py' : '';
 
     // Map context to HealthProfile
@@ -65,6 +65,7 @@ export async function POST(request: NextRequest) {
       height: context.height || 165,
       weight: context.weight || 60,
       bioage: typeof context.age === 'string' ? parseInt(context.age) : context.age, // Default to chronological
+      is_menstruating: context.is_menstruating,
       lifestyle_quiz: {
         ...context.lifestyle,
         symptoms: context.symptoms,
@@ -76,18 +77,21 @@ export async function POST(request: NextRequest) {
     };
 
     let analysisResult;
+    let bioage: number | undefined;
+    let skinAge: number | undefined;
+
     try {
       let pythonResponse;
 
       if (context.face_photo) {
         // If photo exists, use the photo endpoint with multipart/form-data
         const formData = new FormData();
-        
+
         // Convert base64 to blob
         const base64Data = context.face_photo.split(',')[1];
         const binaryData = Buffer.from(base64Data, 'base64');
         const blob = new Blob([binaryData], { type: 'image/jpeg' });
-        
+
         formData.append('profile_json', JSON.stringify(healthProfile));
         formData.append('face_photo', blob, 'face.jpg');
 
@@ -107,6 +111,10 @@ export async function POST(request: NextRequest) {
       if (pythonResponse.ok) {
         const data = await pythonResponse.json();
         analysisResult = data.report; // The structured report
+        if (data.health_profile) {
+          bioage = data.health_profile.bioage;
+          skinAge = data.health_profile.skin_age;
+        }
       } else {
         console.warn('Python backend failed, falling back to Mistral:', await pythonResponse.text());
         // Fallback logic below
@@ -124,6 +132,11 @@ export async function POST(request: NextRequest) {
       const assessment = analysisResult.health_assessment;
       riskScore = 85; // Default optimistic score if not provided
       if (assessment.primary_risks) riskFactors = assessment.primary_risks;
+
+      // Extract bioage from the report or profile if available
+      // Note: analysisResult is data.report. We need data.health_profile for bioage/skin_age
+      // But we only assigned analysisResult = data.report above.
+      // Let's fix the data extraction above first.
 
       aureliaAnalysis = `
 ## 🏥 Health Assessment
@@ -194,6 +207,8 @@ ${analysisResult.supplement_protocol.map((supp: any) => `- **${supp.supplement}*
       mlConfidence: 0.9,
       riskFactors: riskFactors,
       aureliaAnalysis: aureliaAnalysis,
+      bioage: bioage,
+      skinAge: skinAge,
       timestamp: new Date().toISOString(),
     };
 

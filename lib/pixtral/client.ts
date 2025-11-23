@@ -1,3 +1,5 @@
+import sharp from 'sharp';
+
 /**
  * Pixtral OCR Client
  * Handles PDF to text extraction using Pixtral OCR API
@@ -110,60 +112,92 @@ export async function extractTextFromDocument(
   }
 
   try {
+    // Resize image if it's too large to prevent timeouts
+    let processedBuffer = fileBuffer;
+    try {
+      const metadata = await sharp(fileBuffer).metadata();
+      if (metadata.width && metadata.width > 2048) {
+        console.log('Resizing large image for OCR...');
+        processedBuffer = await sharp(fileBuffer)
+          .resize(2048, null, { withoutEnlargement: true })
+          .jpeg({ quality: 80 })
+          .toBuffer();
+      } else {
+        // Convert to JPEG to ensure compatibility and reduce size
+        processedBuffer = await sharp(fileBuffer)
+          .jpeg({ quality: 80 })
+          .toBuffer();
+      }
+    } catch (sharpError) {
+      console.warn('Image processing failed, using original buffer:', sharpError);
+    }
+
     // Convert buffer to base64
-    const base64Data = fileBuffer.toString('base64');
+    const base64Data = processedBuffer.toString('base64');
 
     // Note: The actual Pixtral API endpoint may differ
     // This is a placeholder - update with real endpoint when available
     const apiEndpoint = process.env.PIXTRAL_API_ENDPOINT || 'https://api.mistral.ai/v1/chat/completions';
 
-    const response = await fetch(apiEndpoint, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'pixtral-12b-2409',
-        messages: [
+    // Create an AbortController for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 600000); // 10 minutes timeout
+
+    try {
+      const response = await fetch(apiEndpoint, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'pixtral-12b-2409',
+          messages: [
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: 'Transcribe all text from this document exactly as it appears. Do not summarize, do not extract specific fields, and do not translate yet. Just give me the raw text content including all numbers, units, and labels.',
+                },
+                {
+                  type: 'image_url',
+                  image_url: `data:image/jpeg;base64,${base64Data}`,
+                },
+              ],
+            },
+          ],
+        }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Pixtral API error: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+
+      const data = await response.json();
+
+      // Transform Pixtral response to our format
+      const extractedText = data.choices?.[0]?.message?.content || '';
+
+      return {
+        text: extractedText,
+        confidence: 0.85,
+        pages: [
           {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: 'Extract the medical test results from this document. Return the data as a clean list in the format: "Test Name: Value Unit". Example: "HbA1c: 5.7 %". Do not use Markdown tables. Omit disclaimers and long descriptions.',
-              },
-              {
-                type: 'image_url',
-                image_url: `data:${mimeType};base64,${base64Data}`,
-              },
-            ],
+            page_number: 1,
+            text: extractedText,
+            confidence: 0.85,
           },
         ],
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Pixtral API error: ${response.status} ${response.statusText} - ${errorText}`);
+      };
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      throw fetchError;
     }
-
-    const data = await response.json();
-
-    // Transform Pixtral response to our format
-    const extractedText = data.choices?.[0]?.message?.content || '';
-
-    return {
-      text: extractedText,
-      confidence: 0.85,
-      pages: [
-        {
-          page_number: 1,
-          text: extractedText,
-          confidence: 0.85,
-        },
-      ],
-    };
 
   } catch (error) {
     console.error('Pixtral OCR extraction error:', error);

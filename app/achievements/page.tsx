@@ -52,7 +52,7 @@ export default function AchievementsPage() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-aurelia-purple-dark text-white">
       <Header />
       <div className="py-12 px-4">
         <div className="max-w-7xl mx-auto">

@@ -1,103 +1,64 @@
-# AURELIA - Women's Health Intelligence Platform & AI Coach
+# ✦ AURELIA
+**Women's Health Intelligence & Longevity Strategist**
 
-> A sophisticated longevity strategist and women's health intelligence agent powered by AI. Combines advanced biomarker analysis, biological age estimation, and agentic research to provide personalized, evidence-based health insights.
+Aurelia is an AI-powered platform that analyzes blood test results and health data to provide personalized, evidence-based longevity insights tailored to female physiology.
 
-![Version](https://img.shields.io/badge/version-1.0.0-purple)
-![Status](https://img.shields.io/badge/status-production--ready-green)
-![License](https://img.shields.io/badge/license-MIT-blue)
-[![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+## ✨ Features
+- **Smart Analysis**: Upload blood test PDFs or images to extract biomarkers automatically using AI.
+- **AI Health Coach**: Get personalized recommendations based on your unique biology and goals.
+- **Bioage Estimation**: Optional selfie analysis to estimate biological skin age.
+- **Privacy First**: Your health data is processed securely and never stored without consent.
 
----
-
-## 🌟 Overview
-
-AURELIA is a comprehensive health analysis platform that bridges the gap between medical data and actionable longevity strategies. It consists of two core components:
-
-1.  **Frontend Platform (Next.js)**: A user-friendly interface for data upload, visualization, and tracking.
-2.  **AI Health Coach (Python/FastAPI)**: An autonomous agent that performs deep research, estimates biological age from photos, and generates detailed protocols.
-
----
-
-## ✨ Key Features
-
-### 🖥️ Frontend Platform
-- **📄 PDF Upload & Extraction**: Drag-and-drop blood test PDF upload with Pixtral Vision extraction.
-- **📝 Comprehensive Questionnaire**: Symptom assessment, menstrual cycle tracking, and lifestyle evaluation.
-- **📊 Interactive Dashboard**: Track health scores, biomarker trends, and risk factors over time.
-- **📈 Data Visualization**: Beautiful charts and gauges for health metrics.
-- **💡 Personalized Recommendations**: Evidence-based action plans tailored to female physiology.
-
-### 🧠 AI Health Coach (Backend)
-- **🔍 Agentic Research**: Automatically searches medical literature (PubMed, etc.) for specific conditions.
-- **🔄 Biological Age Tracking**: Analyzes age acceleration and reversal strategies.
-- **📸 Skin Age Estimation**: Vision Transformer (ViT) analysis of face photos to estimate biological skin age.
-- **📚 Source Citations**: Every recommendation is backed by credible, cited research.
-- **💾 Structured Output**: JSON reports with health assessment, interventions, and monitoring plans.
-
----
-
-## 🔧 Technology Stack
-
-### Frontend (Web App)
-- **Framework**: Next.js 14+ (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS, Shadcn/ui
-- **AI Integration**: Mistral AI / Google Gemini
-- **Vision**: Pixtral Vision API
-
-### Backend (AI Agent)
-- **Runtime**: Python 3.10+
-- **Framework**: FastAPI
-- **AI Model**: NetMind AI (Kimi-K2-Instruct), OpenAI
-- **Computer Vision**: Vision Transformer (ViT) for age estimation
-- **Search**: DuckDuckGo (medical research)
-- **Package Manager**: uv
-
----
-
-## 🚀 Getting Started
+## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ and npm
-- Python 3.10+ and uv
-- API Keys: Mistral, Pixtral, NetMind, OpenAI (optional)
+- Node.js 18+
+- Python 3.10+
 
-### 1. Frontend Setup
+### Installation
 
-```bash
-# Install dependencies
-npm install
+1. **Clone & Install**
+   ```bash
+   git clone https://github.com/slavastar/aurelia.git
+   cd aurelia
+   npm install
+   ```
 
-# Set up environment variables (.env.local)
-# MISTRAL_API_KEY=...
-# PIXTRAL_API_KEY=...
+2. **Environment Setup**
+   Create a `.env.local` file in the root directory with your API keys:
+   ```env
+   MISTRAL_API_KEY=your_mistral_key
+   PIXTRAL_API_KEY=your_pixtral_key
+   # Optional: For blob storage
+   BLOB_READ_WRITE_TOKEN=your_vercel_blob_token
+   ```
 
-# Run development server
-npm run dev
-# Access at http://localhost:3000
-```
+3. **Run the App**
+   You need two terminals to run the full stack:
 
-### 2. Backend Setup (AI Agent)
+   **Terminal 1: Start Backend (AI Agent)**
+   ```bash
+   chmod +x run_backend.sh
+   ./run_backend.sh
+   ```
 
-```bash
-# Install dependencies with uv
-uv sync
+   **Terminal 2: Start Frontend**
+   ```bash
+   npm run dev
+   ```
 
-# Set up environment variables (.env)
-# NET_MIND_API_KEY=...
+   Open [http://localhost:3000](http://localhost:3000) to start your analysis.
 
-# Start FastAPI server
-python api.py
-# Access at http://localhost:8000
-```
+## 🛠️ Tech Stack
+- **Frontend**: Next.js 14 (App Router), Tailwind CSS, Framer Motion
+- **Backend**: Python FastAPI
+- **AI Models**:
+  - **Mistral Large**: Complex medical analysis and recommendations.
+  - **Pixtral**: OCR and document extraction.
+  - **Vision Transformer**: Biological age estimation.
 
 ---
-
-## 📊 Data Flow
-
-1.  **User** uploads blood test PDF & completes questionnaire on Frontend.
-2.  **Pixtral Vision** extracts biomarkers.
-3.  **Frontend** sends data + optional selfie to **Backend API**.
+*Built for the future of women's health.*
 4.  **AI Agent** analyzes biomarkers, estimates bioage (from photo), and researches specific issues.
 5.  **Agent** returns a comprehensive JSON report with citations.
 6.  **Frontend** renders the report, visualizations, and action plan.

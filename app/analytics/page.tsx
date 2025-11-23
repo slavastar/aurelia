@@ -129,7 +129,7 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-aurelia-purple-dark text-white">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-aurelia-lime mx-auto"></div>
           <p className="mt-4 text-white/60">Loading analytics...</p>
@@ -140,7 +140,7 @@ export default function AnalyticsPage() {
 
   if (!biomarkers || Object.keys(biomarkers).length === 0) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-aurelia-purple-dark text-white">
         <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-between mb-8">
@@ -177,7 +177,7 @@ export default function AnalyticsPage() {
   const radarData = getRadarData();
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-aurelia-purple-dark text-white">
       <Header />
       <div className="container mx-auto px-4 py-8">
         {/* Header */}

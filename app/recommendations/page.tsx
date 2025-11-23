@@ -39,7 +39,7 @@ export default function RecommendationsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-aurelia-purple-dark text-white">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-4 border-aurelia-lime border-t-transparent mx-auto mb-4"></div>
           <p className="text-white/60">Loading recommendations...</p>
@@ -49,7 +49,7 @@ export default function RecommendationsPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-aurelia-purple-dark text-white">
       <Header />
       <div className="py-12 px-4">
         <div className="max-w-6xl mx-auto">

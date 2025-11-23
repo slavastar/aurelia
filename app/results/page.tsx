@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import ReactMarkdown from 'react-markdown';
 import { Biomarkers, QuestionnaireData } from '@/types';
 import HealthScoreGauge from '@/components/results/HealthScoreGauge';
 import BiomarkerChart from '@/components/results/BiomarkerChart';
@@ -23,6 +24,8 @@ interface AnalysisResult {
   mlConfidence?: number;
   riskFactors?: string[];
   aureliaAnalysis?: string;
+  bioage?: number;
+  skinAge?: number;
   error?: string;
 }
 
@@ -69,11 +72,18 @@ export default function ResultsPage() {
     try {
       // Construct cycle_status
       let cycleStatus = 'Regular';
-      if (questionnaire.menopauseStatus && questionnaire.menopauseStatus !== 'No') {
-        cycleStatus = questionnaire.menopauseStatus;
-      } else if (questionnaire.pregnancyStatus && questionnaire.pregnancyStatus !== 'No') {
+      let isMenstruating = true;
+
+      if (questionnaire.menopause && questionnaire.menopause === 'Yes') {
+        cycleStatus = 'Menopause';
+        isMenstruating = false;
+      } else if (questionnaire.pregnancyStatus && questionnaire.pregnancyStatus !== 'No' && questionnaire.pregnancyStatus !== 'Not applicable' && questionnaire.pregnancyStatus !== 'Prefer not to answer') {
         cycleStatus = questionnaire.pregnancyStatus;
-      } else if (questionnaire.hormonalContraception && questionnaire.hormonalContraception !== 'None') {
+        // Pregnancy usually means no menstruation, but for inflammation score (pre vs post menopausal),
+        // a pregnant woman is biologically closer to pre-menopausal (high estrogen) than post-menopausal.
+        // So we keep isMenstruating = true (or we could add a specific flag, but the schema expects bool).
+        isMenstruating = true;
+      } else if (questionnaire.hormonalContraception && questionnaire.hormonalContraception !== 'No' && questionnaire.hormonalContraception !== 'Prefer not to answer') {
         cycleStatus = `Contraception: ${questionnaire.hormonalContraception}`;
       }
 
@@ -106,6 +116,7 @@ export default function ResultsPage() {
             height: height,
             weight: weight,
             cycle_status: cycleStatus,
+            is_menstruating: isMenstruating,
             symptoms: symptoms,
             goals: questionnaire.goals || questionnaire.primaryGoals,
             face_photo: questionnaire.facePhoto, // Base64 string
@@ -167,7 +178,7 @@ export default function ResultsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-aurelia-purple-dark text-white">
         <div className="text-center">
           <div className="relative w-24 h-24 mx-auto mb-6">
             <div className="absolute inset-0 rounded-full border-4 border-white/10"></div>
@@ -183,7 +194,7 @@ export default function ResultsPage() {
 
   if (result?.isEmergency) {
     return (
-      <div className="min-h-screen py-12 px-4">
+      <div className="min-h-screen py-12 px-4 bg-aurelia-purple-dark text-white">
         <div className="max-w-3xl mx-auto">
           <div className="bg-red-900/20 backdrop-blur-md rounded-2xl shadow-xl p-8 border-4 border-red-500/50">
             <div className="flex items-start gap-4 mb-6">
@@ -222,7 +233,7 @@ export default function ResultsPage() {
 
   if (!result?.success) {
     return (
-      <div className="min-h-screen py-12 px-4">
+      <div className="min-h-screen py-12 px-4 bg-aurelia-purple-dark text-white">
         <div className="max-w-3xl mx-auto">
           <div className="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl shadow-xl p-8 text-center">
             <AlertTriangle className="w-16 h-16 text-red-400 mx-auto mb-4" />
@@ -241,7 +252,7 @@ export default function ResultsPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-aurelia-purple-dark text-white">
       <Header />
       <div className="py-12 px-4">
         <Toaster position="top-right" />
@@ -259,7 +270,7 @@ export default function ResultsPage() {
                     <div className="text-center mb-12">
             <h1 className="text-5xl font-bold gradient-aurelia-text-lime mb-4 flex items-center justify-center gap-3">
               Your
-              <Image src="/logo.svg" alt="Aurelia" width={200} height={60} className="h-14 w-auto" />
+              <Image src="/logo.svg" alt="Aurelia" width={600} height={180} className="h-48 w-auto" />
               Analysis
             </h1>
             <p className="text-xl text-white/80">
@@ -314,6 +325,38 @@ export default function ResultsPage() {
           </div>
         )}
 
+        {/* Bioage & Skin Age Section */}
+        {(result.bioage !== undefined || result.skinAge !== undefined) && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            {result.bioage !== undefined && (
+              <div className="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl shadow-xl p-8 flex flex-col items-center justify-center text-center">
+                <h3 className="text-xl font-bold text-white mb-2">Biological Age</h3>
+                <div className="text-5xl font-bold text-aurelia-lime mb-2">
+                  {result.bioage.toFixed(1)}
+                </div>
+                <p className="text-white/60">
+                  Years
+                  {questionnaireData?.age && (
+                    <span className="ml-2 text-sm">
+                      ({result.bioage < parseInt(questionnaireData.age) ? 'Decelerated' : 'Accelerated'})
+                    </span>
+                  )}
+                </p>
+              </div>
+            )}
+
+            {result.skinAge !== undefined && (
+              <div className="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl shadow-xl p-8 flex flex-col items-center justify-center text-center">
+                <h3 className="text-xl font-bold text-white mb-2">Skin Age</h3>
+                <div className="text-5xl font-bold text-aurelia-purple-light mb-2">
+                  {result.skinAge.toFixed(1)}
+                </div>
+                <p className="text-white/60">Years (Estimated from Photo)</p>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Biomarker Visualization */}
         <div className="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl shadow-xl p-8 mb-8">
           <div className="flex items-center gap-3 mb-6">
@@ -335,14 +378,14 @@ export default function ResultsPage() {
           <div className="flex items-center gap-3 mb-6">
             <Heart className="w-8 h-8 text-aurelia-lime" />
             <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-              <Image src="/logo.svg" alt="Aurelia" width={120} height={36} className="h-8 w-auto" />
+              <Image src="/logo.svg" alt="Aurelia" width={360} height={108} className="h-24 w-auto" />
               Personalized Analysis
             </h2>
           </div>
 
           <div className="prose prose-invert prose-lg max-w-none">
-            <div className="whitespace-pre-line text-white/90 leading-relaxed">
-              {result.aureliaAnalysis}
+            <div className="text-white/90 leading-relaxed">
+              <ReactMarkdown>{result.aureliaAnalysis || ''}</ReactMarkdown>
             </div>
           </div>
         </div>

@@ -17,13 +17,13 @@ export default function Header({ showNav = true, className = "" }: HeaderProps) 
           <Image
             src="/logo.svg"
             alt="Aurelia Logo"
-            width={267}
-            height={80}
-            className="h-20 w-auto object-contain"
+            width={534}
+            height={160}
+            className="h-40 w-auto object-contain"
             priority
           />
         </Link>
-        
+
         {showNav && (
           <nav className="hidden md:flex gap-6 items-center">
             <Link href="/dashboard" className="text-white/80 hover:text-aurelia-lime transition flex items-center gap-1">

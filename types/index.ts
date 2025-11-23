@@ -102,7 +102,8 @@ export interface UserContext {
   age: number;
   height?: number; // cm
   weight?: number; // kg
-  cycle_status?: CycleStatus;
+  cycle_status?: CycleStatus | string;
+  is_menstruating?: boolean;
   symptoms: string[];
   goals: string[];
   lifestyle?: {
@@ -143,6 +144,8 @@ export interface AnalysisOutput {
   mlConfidence?: number;
   riskFactors?: string[];
   aureliaAnalysis?: string;
+  bioage?: number;
+  skinAge?: number;
   error?: string;
   timestamp: string;
 }

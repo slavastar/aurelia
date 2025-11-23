@@ -21,8 +21,8 @@ export interface ParsingResult {
 }
 
 // Comprehensive biomarker patterns with variations
-// Updated to handle various separators (colons, spaces, dashes, dots)
-const SEPARATOR = '[:\\s\\-\\.]*';
+// Updated to handle various separators (colons, spaces, dashes, dots) and optional labels
+const SEPARATOR = '(?:[:\\s\\-\\.]|(?:Result|Value|Level|Measurement)\\s*[:\\s\\-\\.]*)*';
 
 const BIOMARKER_PATTERNS = {
   // Glucose & Diabetes
@@ -31,25 +31,33 @@ const BIOMARKER_PATTERNS = {
     new RegExp(`Hemoglobin\\s*A1c${SEPARATOR}(\\d+\\.?\\d*)\\s*%?`, 'i'),
     new RegExp(`Glycated\\s*Hemoglobin${SEPARATOR}(\\d+\\.?\\d*)\\s*%?`, 'i'),
     new RegExp(`A1C${SEPARATOR}(\\d+\\.?\\d*)\\s*%?`, 'i'),
+    new RegExp(`Hémoglobine\\s*Glyquée${SEPARATOR}(\\d+\\.?\\d*)\\s*%?`, 'i'), // French
   ],
   Glucose: [
     new RegExp(`Glucose${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:mg\\/dL|mmol\\/L)?`, 'i'),
     new RegExp(`Blood\\s*Glucose${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:mg\\/dL|mmol\\/L)?`, 'i'),
     new RegExp(`Fasting\\s*Glucose${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:mg\\/dL|mmol\\/L)?`, 'i'),
+    new RegExp(`Glycémie${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:mg\\/dL|mmol\\/L)?`, 'i'), // French
+    new RegExp(`Glycemie${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:mg\\/dL|mmol\\/L)?`, 'i'), // French
   ],
 
   // Iron Studies
   Ferritin: [
     new RegExp(`Ferritin${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:ng\\/mL|μg\\/L|ug\\/L)?`, 'i'),
     new RegExp(`Serum\\s*Ferritin${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:ng\\/mL|μg\\/L|ug\\/L)?`, 'i'),
+    new RegExp(`Ferritine${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:ng\\/mL|μg\\/L|ug\\/L)?`, 'i'), // French
   ],
   Iron: [
     new RegExp(`Iron${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:μg\\/dL|ug\\/dL|mcg\\/dL)?`, 'i'),
     new RegExp(`Serum\\s*Iron${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:μg\\/dL|ug\\/dL|mcg\\/dL)?`, 'i'),
+    new RegExp(`Fer${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:μg\\/dL|ug\\/dL|mcg\\/dL)?`, 'i'), // French
+    new RegExp(`Fer\\s*Sérique${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:μg\\/dL|ug\\/dL|mcg\\/dL)?`, 'i'), // French
   ],
   TIBC: [
     new RegExp(`TIBC${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:μg\\/dL|ug\\/dL|mcg\\/dL)?`, 'i'),
     new RegExp(`Total\\s*Iron\\s*Binding\\s*Capacity${SEPARATOR}(\\d+\\.?\\d*)`, 'i'),
+    new RegExp(`Capacité\\s*Totale\\s*de\\s*Fixation${SEPARATOR}(\\d+\\.?\\d*)`, 'i'), // French
+    new RegExp(`CTF${SEPARATOR}(\\d+\\.?\\d*)`, 'i'), // French
   ],
 
   // Inflammation
@@ -57,11 +65,14 @@ const BIOMARKER_PATTERNS = {
     new RegExp(`CRP${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:mg\\/L|mg\\/dL)?`, 'i'),
     new RegExp(`C[-\\s]*Reactive\\s*Protein${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:mg\\/L|mg\\/dL)?`, 'i'),
     new RegExp(`hs[-\\s]*CRP${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:mg\\/L|mg\\/dL)?`, 'i'),
+    new RegExp(`Protéine\\s*C[-\\s]*Réactive${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:mg\\/L|mg\\/dL)?`, 'i'), // French
   ],
   ESR: [
     new RegExp(`ESR${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:mm\\/hr)?`, 'i'),
     new RegExp(`Erythrocyte\\s*Sedimentation\\s*Rate${SEPARATOR}(\\d+\\.?\\d*)`, 'i'),
     new RegExp(`Sed\\s*Rate${SEPARATOR}(\\d+\\.?\\d*)`, 'i'),
+    new RegExp(`Vitesse\\s*de\\s*Sédimentation${SEPARATOR}(\\d+\\.?\\d*)`, 'i'), // French
+    new RegExp(`VS${SEPARATOR}(\\d+\\.?\\d*)`, 'i'), // French
   ],
 
   // Thyroid
@@ -73,11 +84,13 @@ const BIOMARKER_PATTERNS = {
     new RegExp(`T3${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:ng\\/dL|pmol\\/L)?`, 'i'),
     new RegExp(`Triiodothyronine${SEPARATOR}(\\d+\\.?\\d*)`, 'i'),
     new RegExp(`Free\\s*T3${SEPARATOR}(\\d+\\.?\\d*)`, 'i'),
+    new RegExp(`T3\\s*Libre${SEPARATOR}(\\d+\\.?\\d*)`, 'i'), // French
   ],
   T4: [
     new RegExp(`T4${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:μg\\/dL|ug\\/dL|pmol\\/L)?`, 'i'),
     new RegExp(`Thyroxine${SEPARATOR}(\\d+\\.?\\d*)`, 'i'),
     new RegExp(`Free\\s*T4${SEPARATOR}(\\d+\\.?\\d*)`, 'i'),
+    new RegExp(`T4\\s*Libre${SEPARATOR}(\\d+\\.?\\d*)`, 'i'), // French
   ],
 
   // Vitamins
@@ -85,35 +98,45 @@ const BIOMARKER_PATTERNS = {
     new RegExp(`Vitamin\\s*D${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:ng\\/mL|nmol\\/L)?`, 'i'),
     new RegExp(`25[-\\s]*OH\\s*Vitamin\\s*D${SEPARATOR}(\\d+\\.?\\d*)`, 'i'),
     new RegExp(`Vit\\s*D${SEPARATOR}(\\d+\\.?\\d*)`, 'i'),
+    new RegExp(`Vitamine\\s*D${SEPARATOR}(\\d+\\.?\\d*)`, 'i'), // French
   ],
   VitaminB12: [
     new RegExp(`Vitamin\\s*B[-\\s]*12${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:pg\\/mL|pmol\\/L)?`, 'i'),
     new RegExp(`B12${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:pg\\/mL|pmol\\/L)?`, 'i'),
     new RegExp(`Cobalamin${SEPARATOR}(\\d+\\.?\\d*)`, 'i'),
+    new RegExp(`Vitamine\\s*B12${SEPARATOR}(\\d+\\.?\\d*)`, 'i'), // French
   ],
   Folate: [
     new RegExp(`Folate${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:ng\\/mL|nmol\\/L)?`, 'i'),
     new RegExp(`Folic\\s*Acid${SEPARATOR}(\\d+\\.?\\d*)`, 'i'),
+    new RegExp(`Folates${SEPARATOR}(\\d+\\.?\\d*)`, 'i'), // French
+    new RegExp(`Acide\\s*Folique${SEPARATOR}(\\d+\\.?\\d*)`, 'i'), // French
   ],
 
   // Lipid Panel
   TotalCholesterol: [
     new RegExp(`Total\\s*Cholesterol${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:mg\\/dL|mmol\\/L)?`, 'i'),
     new RegExp(`Cholesterol${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:mg\\/dL|mmol\\/L)?`, 'i'),
+    new RegExp(`Cholestérol\\s*Total${SEPARATOR}(\\d+\\.?\\d*)`, 'i'), // French
+    new RegExp(`Cholesterol\\s*Total${SEPARATOR}(\\d+\\.?\\d*)`, 'i'), // French
   ],
   LDL: [
     new RegExp(`LDL${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:mg\\/dL|mmol\\/L)?`, 'i'),
     new RegExp(`LDL[-\\s]*Cholesterol${SEPARATOR}(\\d+\\.?\\d*)`, 'i'),
     new RegExp(`Low\\s*Density\\s*Lipoprotein${SEPARATOR}(\\d+\\.?\\d*)`, 'i'),
+    new RegExp(`Cholestérol\\s*LDL${SEPARATOR}(\\d+\\.?\\d*)`, 'i'), // French
   ],
   HDL: [
     new RegExp(`HDL${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:mg\\/dL|mmol\\/L)?`, 'i'),
     new RegExp(`HDL[-\\s]*Cholesterol${SEPARATOR}(\\d+\\.?\\d*)`, 'i'),
     new RegExp(`High\\s*Density\\s*Lipoprotein${SEPARATOR}(\\d+\\.?\\d*)`, 'i'),
+    new RegExp(`Cholestérol\\s*HDL${SEPARATOR}(\\d+\\.?\\d*)`, 'i'), // French
   ],
   Triglycerides: [
     new RegExp(`Triglycerides${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:mg\\/dL|mmol\\/L)?`, 'i'),
     new RegExp(`Trig${SEPARATOR}(\\d+\\.?\\d*)`, 'i'),
+    new RegExp(`Triglycérides${SEPARATOR}(\\d+\\.?\\d*)`, 'i'), // French
+    new RegExp(`Triglycerides${SEPARATOR}(\\d+\\.?\\d*)`, 'i'), // French
   ],
 
   // Liver Function
@@ -121,22 +144,27 @@ const BIOMARKER_PATTERNS = {
     new RegExp(`ALT${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:U\\/L|IU\\/L)?`, 'i'),
     new RegExp(`Alanine\\s*Aminotransferase${SEPARATOR}(\\d+\\.?\\d*)`, 'i'),
     new RegExp(`SGPT${SEPARATOR}(\\d+\\.?\\d*)`, 'i'),
+    new RegExp(`ALAT${SEPARATOR}(\\d+\\.?\\d*)`, 'i'), // French
   ],
   AST: [
     new RegExp(`AST${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:U\\/L|IU\\/L)?`, 'i'),
     new RegExp(`Aspartate\\s*Aminotransferase${SEPARATOR}(\\d+\\.?\\d*)`, 'i'),
     new RegExp(`SGOT${SEPARATOR}(\\d+\\.?\\d*)`, 'i'),
+    new RegExp(`ASAT${SEPARATOR}(\\d+\\.?\\d*)`, 'i'), // French
   ],
 
   // Kidney Function
   Creatinine: [
     new RegExp(`Creatinine${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:mg\\/dL|μmol\\/L|umol\\/L)?`, 'i'),
     new RegExp(`Serum\\s*Creatinine${SEPARATOR}(\\d+\\.?\\d*)`, 'i'),
+    new RegExp(`Créatinine${SEPARATOR}(\\d+\\.?\\d*)`, 'i'), // French
   ],
   eGFR: [
     new RegExp(`eGFR${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:mL\\/min)?`, 'i'),
     new RegExp(`Estimated\\s*GFR${SEPARATOR}(\\d+\\.?\\d*)`, 'i'),
     new RegExp(`Glomerular\\s*Filtration\\s*Rate${SEPARATOR}(\\d+\\.?\\d*)`, 'i'),
+    new RegExp(`DFG${SEPARATOR}(\\d+\\.?\\d*)`, 'i'), // French
+    new RegExp(`Débit\\s*de\\s*Filtration\\s*Glomérulaire${SEPARATOR}(\\d+\\.?\\d*)`, 'i'), // French
   ],
 
   // Complete Blood Count
@@ -144,15 +172,19 @@ const BIOMARKER_PATTERNS = {
     new RegExp(`Hemoglobin${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:g\\/dL|g\\/L)?`, 'i'),
     new RegExp(`Hgb${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:g\\/dL|g\\/L)?`, 'i'),
     new RegExp(`Hb${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:g\\/dL|g\\/L)?`, 'i'),
+    new RegExp(`Hémoglobine${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:g\\/dL|g\\/L)?`, 'i'), // French
   ],
   WBC: [
     new RegExp(`WBC${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:×10³\\/μL|K\\/μL)?`, 'i'),
     new RegExp(`White\\s*Blood\\s*Cell${SEPARATOR}(\\d+\\.?\\d*)`, 'i'),
     new RegExp(`Leukocytes${SEPARATOR}(\\d+\\.?\\d*)`, 'i'),
+    new RegExp(`Leucocytes${SEPARATOR}(\\d+\\.?\\d*)`, 'i'), // French
+    new RegExp(`Globules\\s*Blancs${SEPARATOR}(\\d+\\.?\\d*)`, 'i'), // French
   ],
   Platelets: [
     new RegExp(`Platelets${SEPARATOR}(\\d+\\.?\\d*)\\s*(?:×10³\\/μL|K\\/μL)?`, 'i'),
     new RegExp(`PLT${SEPARATOR}(\\d+\\.?\\d*)`, 'i'),
+    new RegExp(`Plaquettes${SEPARATOR}(\\d+\\.?\\d*)`, 'i'), // French
   ],
 };
 

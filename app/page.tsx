@@ -6,7 +6,7 @@ import Header from "@/components/ui/Header"
 
 export default function Home() {
   return (
-    <main className="min-h-screen relative overflow-hidden">
+    <main className="min-h-screen relative overflow-hidden bg-aurelia-purple-dark text-white">
       <InteractiveBackground />
 
       <div className="relative z-10">
@@ -58,9 +58,9 @@ export default function Home() {
             <Image
               src="/logo.svg"
               alt="Aurelia"
-              width={160}
-              height={48}
-              className="h-10 w-auto object-contain"
+              width={320}
+              height={96}
+              className="h-20 w-auto object-contain"
             />
             ?
           </h3>
@@ -178,9 +178,9 @@ export default function Home() {
             <Image
               src="/logo.svg"
               alt="Aurelia Logo"
-              width={120}
-              height={36}
-              className="h-8 w-auto object-contain"
+              width={240}
+              height={72}
+              className="h-16 w-auto object-contain"
             />
           </div>
           <p className="text-sm text-white/60 text-center">

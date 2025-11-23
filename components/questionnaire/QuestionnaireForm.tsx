@@ -134,14 +134,49 @@ export default function QuestionnaireForm() {
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setError("File size too large. Please upload a photo under 5MB.");
+      // Allow up to 10MB initially, we will resize it
+      if (file.size > 10 * 1024 * 1024) {
+        setError("File size too large. Please upload a photo under 10MB.");
         return;
       }
 
       const reader = new FileReader();
       reader.onloadend = () => {
-        updateField('facePhoto', reader.result as string);
+        // Resize image to avoid localStorage limits
+        const img = new Image();
+        img.src = reader.result as string;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 800;
+          const MAX_HEIGHT = 800;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            // Compress to JPEG with 0.8 quality
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+            updateField('facePhoto', dataUrl);
+          } else {
+            // Fallback if canvas fails
+            updateField('facePhoto', reader.result as string);
+          }
+        };
       };
       reader.readAsDataURL(file);
     }
@@ -188,7 +223,9 @@ export default function QuestionnaireForm() {
         if (formData.menopause === 'No' && !formData.hormonalContraception) { setError("Please answer about contraception"); return false; }
         if (!formData.pregnancyStatus) { setError("Please answer about pregnancy"); return false; }
         return true;
-      case 7: // Goals
+      case 7: // Face Analysis (Optional)
+        return true;
+      case 8: // Goals
         if (formData.goals.length === 0) { setError("Please select at least one goal"); return false; }
         if (!formData.resultPreference) { setError("Please choose your result preference"); return false; }
         return true;
@@ -237,7 +274,7 @@ export default function QuestionnaireForm() {
   }
 
   return (
-    <div className="min-h-screen bg-[#241647] flex flex-col text-white">
+    <div className="min-h-screen bg-aurelia-purple-dark flex flex-col text-white">
       {/* Progress Bar */}
       <div className="fixed top-0 left-0 w-full h-2 bg-white/10 z-50">
         <motion.div

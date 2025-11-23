@@ -49,14 +49,14 @@ export default function PaywallPage() {
 
   if (!uploadResult || !questionnaireData) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-aurelia-purple-dark text-white">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-aurelia-lime"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-aurelia-purple-dark text-white">
       <Header showNav={false} />
       <div className="py-12 px-4">
         <div className="max-w-4xl mx-auto">
@@ -71,16 +71,16 @@ export default function PaywallPage() {
           </div>
 
         {/* Preview Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+        <div className="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl shadow-xl p-8 mb-8">
           <div className="flex items-start gap-4 mb-6">
-            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-              <Check className="h-6 w-6 text-green-600" />
+            <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+              <Check className="h-6 w-6 text-green-400" />
             </div>
             <div className="flex-1">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
+              <h3 className="text-xl font-bold text-white mb-2">
                 Data Successfully Processed
               </h3>
-              <div className="space-y-2 text-gray-600">
+              <div className="space-y-2 text-white/80">
                 <p>✓ {uploadResult.parsing?.parsed?.length || 0} biomarkers extracted from your blood test</p>
                 <p>✓ Health profile completed ({questionnaireData.symptoms?.length || 0} symptoms, {questionnaireData.goals?.length || 0} goals)</p>
                 <p>✓ AI analysis complete with personalized recommendations</p>
@@ -91,13 +91,13 @@ export default function PaywallPage() {
           {/* Blurred Preview */}
           <div className="relative">
             <div className="blur-sm pointer-events-none select-none">
-              <div className="bg-gradient-to-r from-aurelia-purple/10 to-aurelia-lime/20 rounded-lg p-6 mb-4">
-                <h4 className="font-bold text-gray-900 mb-2">Your Health Score</h4>
+              <div className="bg-gradient-to-r from-aurelia-purple/40 to-aurelia-lime/10 rounded-lg p-6 mb-4 border border-white/10">
+                <h4 className="font-bold text-white mb-2">Your Health Score</h4>
                 <div className="text-4xl font-bold text-aurelia-lime">78/100</div>
-                <p className="text-sm text-gray-600 mt-2">Good - Room for optimization</p>
+                <p className="text-sm text-white/60 mt-2">Good - Room for optimization</p>
               </div>
               <div className="space-y-3">
-                <div className="bg-gray-50 rounded-lg p-4">
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
                   <h5 className="font-semibold text-gray-900 mb-1">Key Observation #1</h5>
                   <p className="text-gray-600">Your ferritin levels suggest...</p>
                 </div>

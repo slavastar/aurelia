@@ -79,7 +79,7 @@ export default function DashboardPage() {
 
   if (stats.totalEntries === 0) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-aurelia-purple-dark text-white">
         <Header />
         <div className="py-12 px-4">
           <div className="max-w-4xl mx-auto">
@@ -103,7 +103,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-aurelia-purple-dark text-white">
       <Header />
       <div className="py-12 px-4">
         <div className="max-w-7xl mx-auto">
