@@ -6,6 +6,14 @@ from typing import Dict, Any, Optional
 import json
 from datetime import datetime
 import io
+import base64
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+from PIL import Image
+from torchvision import transforms
+from torchvision import models
+from pytorch_grad_cam import GradCAMPlusPlus
 
 # Optional image processing imports
 try:
@@ -38,6 +46,10 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Set device for models
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Using device: {device}")
+
 # Load age prediction model at startup
 if IMAGE_PROCESSING_AVAILABLE:
     try:
@@ -52,6 +64,28 @@ if IMAGE_PROCESSING_AVAILABLE:
 else:
     processor = None
     age_model = None
+
+# Load GradCAM age regression model
+gradcam_model = None
+if IMAGE_PROCESSING_AVAILABLE:
+    try:
+        print("Loading GradCAM age regression model...")
+        import os
+        model_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "age_regression_model.pth")
+        
+        # Initialize ResNet18 architecture for age regression
+        gradcam_model = models.resnet18(weights=None)
+        # Modify final layer for regression (single output)
+        gradcam_model.fc = torch.nn.Linear(gradcam_model.fc.in_features, 1)
+        
+        # Load trained weights
+        gradcam_model.load_state_dict(torch.load(model_path, map_location=device))
+        gradcam_model = gradcam_model.to(device)
+        gradcam_model.eval()
+        print(f"GradCAM age regression model loaded successfully from {model_path}")
+    except Exception as e:
+        print(f"Warning: Could not load GradCAM age regression model: {e}")
+        gradcam_model = None
 
 
 def parse_age_range(age_label: str) -> tuple:
@@ -168,7 +202,7 @@ async def generate_report(profile: HealthProfile):
             # Parse JSON and adapt to schema
             report_data = json.loads(content)
             
-            from json_adapter import adapt_model_json_to_schema
+            from .json_adapter import adapt_model_json_to_schema
             adapted_data = adapt_model_json_to_schema(report_data)
             
             health_report = HealthReport(**adapted_data)
@@ -199,6 +233,69 @@ async def generate_report(profile: HealthProfile):
             status_code=500,
             detail=f"Error generating report: {str(e)}"
         )
+
+    
+def overlay_pil_images(img1, img2, alpha=0.5):
+    """
+    Returns a PIL image that is a blend of img1 and img2.
+    img1 and img2 must both be RGB and the same size.
+    alpha = 0.0 → only img1
+    alpha = 1.0 → only img2
+    """
+    img1 = img1.convert("RGBA")
+    img2 = img2.convert("RGBA")
+    return Image.blend(img1, img2, alpha).convert("RGB")
+
+
+def predict_with_gradcam(model, pil_image, device):
+    # Force RGB mode for consistency
+    pil_image = pil_image.convert("RGB")
+    orig_w, orig_h = pil_image.size   # <-- store original size
+
+    # ---------- SAME SPATIAL TRANSFORM AS TRAINING ----------
+    resize_224 = transforms.Resize((224, 224))
+
+    # Model input transform (same as training)
+    input_transform = transforms.Compose([
+        resize_224,
+        transforms.ToTensor(),
+        transforms.Normalize(
+            mean=[0.485, 0.456, 0.406],
+            std=[0.229, 0.224, 0.225]
+        )
+    ])
+
+    # Visualization image (normalized for GradCAM overlay)
+    vis_224_pil = resize_224(pil_image)
+    vis_224_np = np.array(vis_224_pil).astype(np.float32) / 255.0  # RGB float32 [0,1]
+
+    # Prepare model tensor
+    input_tensor = input_transform(pil_image).unsqueeze(0).to(device)
+
+    # ---------- PREDICTION ----------
+    model.eval()
+    with torch.no_grad():
+        predicted_age = float(model(input_tensor).cpu().numpy()[0][0])
+
+    # ---------- GRAD-CAM++ ----------
+    target_layers = [model.layer4[-1]]
+    cam = GradCAMPlusPlus(model=model, target_layers=target_layers)
+
+    grayscale_cam = cam(input_tensor=input_tensor)[0]  # shape: (224,224)
+
+    # ----- APPLY COLOR MAP (jet) -----
+    colored_cam_224 = plt.get_cmap("jet")(grayscale_cam)[..., :3]  # float 0–1, shape (224,224,3)
+
+    # Convert to uint8 image
+    cam_pil_224 = Image.fromarray((colored_cam_224 * 255).astype(np.uint8))
+
+    # ---------- UPSCALE GRADCAM BACK TO ORIGINAL SIZE ----------
+    cam_pil = cam_pil_224.resize((orig_w, orig_h), Image.BILINEAR)
+
+    # ---------- ALSO UPSCALE VISUALIZATION IMAGE ----------
+    vis_pil = vis_224_pil.resize((orig_w, orig_h), Image.BILINEAR)
+
+    return predicted_age, cam_pil, vis_pil
 
 
 @app.post("/generate-report-with-photo", response_model=Dict[str, Any])
@@ -253,6 +350,8 @@ async def generate_report_with_photo(
             if IMAGE_PROCESSING_AVAILABLE:
                 image = Image.open(io.BytesIO(contents))
                 skin_age = predict_skin_age(image)
+                _, cam_pil, vis_pil = predict_with_gradcam(gradcam_model, image, device)
+                feature_image = overlay_pil_images(vis_pil, cam_pil, alpha=0.35)
                 profile.skin_age = skin_age
                 print(f"Estimated skin age: {skin_age} years")
             else:
@@ -276,7 +375,7 @@ async def generate_report_with_photo(
         content = content.strip()
         
         report_data = json.loads(content)
-        from json_adapter import adapt_model_json_to_schema
+        from .json_adapter import adapt_model_json_to_schema
         
         # Debug: save raw report
         with open("debug_raw_report.json", "w") as f:
@@ -298,7 +397,16 @@ async def generate_report_with_photo(
             report=health_report
         )
         
-        return response.model_dump(mode='json')
+        # Convert feature_image to base64 for JSON response
+        buffered = io.BytesIO()
+        feature_image.save(buffered, format="PNG")
+        img_str = base64.b64encode(buffered.getvalue()).decode()
+        
+        # Add feature_image to response
+        response_dict = response.model_dump(mode='json')
+        response_dict['feature_image_base64'] = img_str
+        
+        return response_dict
         
     except json.JSONDecodeError as e:
         raise HTTPException(status_code=500, detail=f"JSON parsing error: {e}")
