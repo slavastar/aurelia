@@ -2,6 +2,9 @@
   "name": "aurelia",
   "version": "1.0.0",
   "description": "AURELIA - Longevity Strategist & Women's Health Intelligence Agent",
+  "engines": {
+    "node": ">=20.9.0"
+  },
   "main": "index.js",
   "scripts": {
     "dev": "TURBOPACK=0 next dev",
