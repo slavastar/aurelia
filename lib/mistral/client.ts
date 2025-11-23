@@ -83,6 +83,8 @@ export async function generateAureliaAnalysis(
       temperature: 0.7,
       topP: 0.95,
       maxTokens: 2048,
+    }, {
+      timeoutMs: 120000, // 2 minutes timeout for the request
     });
 
     const text = result.choices?.[0]?.message?.content || '';
