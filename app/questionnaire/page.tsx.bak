@@ -1,0 +1,651 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { 
+  QuestionnaireData, 
+  CycleStatus, 
+  ExerciseFrequency, 
+  StressLevel,
+  COMMON_SYMPTOMS,
+  HEALTH_GOALS,
+  Biomarkers
+} from '@/types';
+
+// Step configuration with emojis and descriptions
+const STEP_CONFIG = [
+  {
+    number: 1,
+    emoji: '👤',
+    title: 'About You',
+    subtitle: 'Let\'s start with the basics',
+    color: 'from-purple-500 to-pink-500'
+  },
+  {
+    number: 2,
+    emoji: '🩺',
+    title: 'Your Symptoms',
+    subtitle: 'Tell us what you\'re experiencing',
+    color: 'from-pink-500 to-rose-500'
+  },
+  {
+    number: 3,
+    emoji: '💪',
+    title: 'Lifestyle',
+    subtitle: 'Your daily habits matter',
+    color: 'from-rose-500 to-orange-500'
+  },
+  {
+    number: 4,
+    emoji: '🎯',
+    title: 'Your Goals',
+    subtitle: 'What do you want to achieve?',
+    color: 'from-orange-500 to-amber-500'
+  },
+  {
+    number: 5,
+    emoji: '📋',
+    title: 'Medical History',
+    subtitle: 'Help us understand your background',
+    color: 'from-amber-500 to-lime-500'
+  }
+];
+
+export default function QuestionnairePage() {
+  const router = useRouter();
+  const [biomarkers, setBiomarkers] = useState<Biomarkers>({});
+  const [currentStep, setCurrentStep] = useState(1);
+  const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const totalSteps = 5;
+
+  const [formData, setFormData] = useState<QuestionnaireData>({
+    age: 30,
+    cycleStatus: 'follicular',
+    symptoms: [],
+    sleepHours: 7,
+    sleepQuality: 'good',
+    exerciseFrequency: 'moderate',
+    stressLevel: 'moderate',
+    goals: [],
+  });
+
+  useEffect(() => {
+    const stored = sessionStorage.getItem('biomarkers');
+    if (stored) {
+      setBiomarkers(JSON.parse(stored));
+    }
+  }, [router]);
+
+  const handleNext = () => {
+    if (currentStep < totalSteps) {
+      setDirection('forward');
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setCurrentStep(currentStep + 1);
+        setIsTransitioning(false);
+        // Show celebration on step completion
+        if (currentStep === 2 || currentStep === 4) {
+          setShowCelebration(true);
+          setTimeout(() => setShowCelebration(false), 2000);
+        }
+      }, 300);
+    } else {
+      handleSubmit();
+    }
+  };
+
+  const handleBack = () => {
+    if (currentStep > 1) {
+      setDirection('backward');
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setCurrentStep(currentStep - 1);
+        setIsTransitioning(false);
+      }, 300);
+    }
+  };
+
+  const handleSubmit = () => {
+    sessionStorage.setItem('questionnaireData', JSON.stringify(formData));
+    setShowCelebration(true);
+    setTimeout(() => {
+      router.push('/upload');
+    }, 1500);
+  };
+
+  const toggleSymptom = (symptom: string) => {
+    setFormData(prev => ({
+      ...prev,
+      symptoms: prev.symptoms.includes(symptom)
+        ? prev.symptoms.filter(s => s !== symptom)
+        : [...prev.symptoms, symptom],
+    }));
+  };
+
+  const toggleGoal = (goal: string) => {
+    setFormData(prev => ({
+      ...prev,
+      goals: prev.goals.includes(goal)
+        ? prev.goals.filter(g => g !== goal)
+        : [...prev.goals, goal],
+    }));
+  };
+
+  const canProceed = () => {
+    switch (currentStep) {
+      case 1:
+        return formData.age >= 18 && formData.age <= 120;
+      case 2:
+        return formData.symptoms.length > 0;
+      case 3:
+        return true;
+      case 4:
+        return formData.goals.length > 0;
+      case 5:
+        return true;
+      default:
+        return true;
+    }
+  };
+
+  const currentStepConfig = STEP_CONFIG[currentStep - 1];
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-600/5 via-white to-violet-500/10 py-12 px-4 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-violet-500/10 rounded-full blur-3xl animate-pulse-slow" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '1s' }} />
+      </div>
+
+      {/* Subtle success notification */}
+      {showCelebration && (
+        <div className="fixed top-8 left-1/2 transform -translate-x-1/2 z-50 animate-fade-in">
+          <div className="bg-gradient-to-r from-purple-600 to-violet-500 text-white px-6 py-3 rounded-full shadow-lg flex items-center gap-2">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            <span className="font-medium">Progress saved</span>
+          </div>
+        </div>
+      )}
+
+      <div className="max-w-4xl mx-auto relative z-10">
+        {/* Header - Clean and minimal */}
+        <div className="text-center mb-12 animate-fade-in">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-r from-purple-600 to-violet-500 mb-6 shadow-lg">
+            <span className="text-3xl">{currentStepConfig.emoji}</span>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold text-purple-600 mb-3">
+            {currentStepConfig.title}
+          </h1>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            {currentStepConfig.subtitle}
+          </p>
+        </div>
+
+        {/* Minimal Progress Bar */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 mb-8 animate-fade-in">
+          <div className="flex items-center justify-between mb-6">
+            <span className="text-sm font-semibold text-gray-900">
+              Step {currentStep} of {totalSteps}
+            </span>
+            <span className="text-sm font-semibold text-purple-600">
+              {Math.round((currentStep / totalSteps) * 100)}%
+            </span>
+          </div>
+          
+          {/* Sleek progress bar */}
+          <div className="relative w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+            <div
+              className="gradient-aurelia h-2 rounded-full transition-all duration-700 ease-out"
+              style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+            />
+          </div>
+
+          {/* Minimal step indicators */}
+          <div className="flex justify-between mt-6">
+            {STEP_CONFIG.map((step) => (
+              <div
+                key={step.number}
+                className="flex flex-col items-center gap-2 transition-all duration-300"
+              >
+                <div
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-semibold transition-all duration-300 ${
+                    step.number < currentStep
+                      ? 'bg-gradient-to-r from-purple-600 to-violet-500 text-white shadow-md'
+                      : step.number === currentStep
+                      ? 'bg-gradient-to-r from-purple-600 to-violet-500 text-white shadow-lg ring-2 ring-violet-500/40'
+                      : 'bg-gray-100 text-gray-400'
+                  }`}
+                >
+                  {step.number < currentStep ? '✓' : step.number}
+                </div>
+                <span className="text-xs font-medium text-gray-500 hidden md:block max-w-[60px] text-center">
+                  {step.title}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Form Content - Clean design */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 md:p-12 mb-8 relative overflow-hidden">
+          {/* Subtle top accent */}
+          <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-600 to-violet-500" />
+          
+          <div
+            className={`transition-all duration-300 ${
+              isTransitioning
+                ? direction === 'forward'
+                  ? 'opacity-0 translate-x-8'
+                  : 'opacity-0 -translate-x-8'
+                : 'opacity-100 translate-x-0'
+            }`}
+          >
+            {/* Step 1: Basic Info */}
+            {currentStep === 1 && (
+              <div className="space-y-8 animate-fade-in">
+                <div className="mb-8">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Let's get started</h2>
+                  <p className="text-gray-600">Tell us a bit about yourself</p>
+                </div>
+                
+                <div className="space-y-6">
+                  <div className="group">
+                    <label className="block text-sm font-semibold text-gray-900 mb-3">
+                      Your Age *
+                    </label>
+                    <input
+                      type="number"
+                      min="18"
+                      max="120"
+                      value={formData.age}
+                      onChange={(e) => setFormData({ ...formData, age: parseInt(e.target.value) })}
+                      className="w-full px-5 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-600/20 focus:border-purple-600 transition-all duration-200 text-base bg-gray-50 hover:bg-white hover:border-gray-300"
+                      placeholder="Enter your age"
+                    />
+                  </div>
+
+                  <div className="group">
+                    <label className="block text-sm font-semibold text-gray-900 mb-3">
+                      Menstrual Cycle Status *
+                    </label>
+                    <select
+                      value={formData.cycleStatus}
+                      onChange={(e) => setFormData({ ...formData, cycleStatus: e.target.value as CycleStatus })}
+                      className="w-full px-5 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-600/20 focus:border-purple-600 transition-all duration-200 text-base bg-gray-50 hover:bg-white hover:border-gray-300"
+                    >
+                      <option value="follicular">Follicular Phase (Days 1-14)</option>
+                      <option value="ovulation">Ovulation (Day 14)</option>
+                      <option value="luteal">Luteal Phase (Days 15-28)</option>
+                      <option value="menstruation">Menstruation</option>
+                      <option value="perimenopause">Perimenopause</option>
+                      <option value="postmenopause">Postmenopause</option>
+                      <option value="not_applicable">Not Applicable</option>
+                    </select>
+                  </div>
+
+                  {formData.cycleStatus !== 'postmenopause' && formData.cycleStatus !== 'not_applicable' && (
+                    <div className="group animate-fade-in">
+                      <label className="block text-sm font-semibold text-gray-900 mb-3">
+                        Typical Cycle Length (days)
+                      </label>
+                      <input
+                        type="number"
+                        min="21"
+                        max="35"
+                        value={formData.cycleLength || 28}
+                        onChange={(e) => setFormData({ ...formData, cycleLength: parseInt(e.target.value) })}
+                        className="w-full px-5 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-600/20 focus:border-purple-600 transition-all duration-200 text-base bg-gray-50 hover:bg-white hover:border-gray-300"
+                        placeholder="28"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-8 p-5 bg-purple-600/5 rounded-xl border border-purple-600/10">
+                  <p className="text-sm text-gray-700 leading-relaxed">
+                    💡 This information helps us provide personalized insights based on your hormonal cycle.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Symptoms */}
+            {currentStep === 2 && (
+              <div className="space-y-8 animate-fade-in">
+                <div className="mb-8">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Current symptoms</h2>
+                  <p className="text-gray-600">Select all that apply (at least one required)</p>
+                </div>
+                
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {COMMON_SYMPTOMS.map((symptom) => (
+                    <button
+                      key={symptom}
+                      onClick={() => toggleSymptom(symptom)}
+                      className={`p-4 rounded-xl border text-sm font-medium transition-all duration-200 ${
+                        formData.symptoms.includes(symptom)
+                          ? 'border-purple-600 bg-gradient-to-r from-purple-600 to-violet-500 text-white shadow-md'
+                          : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-purple-600/30 hover:bg-white'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-left">{symptom}</span>
+                        {formData.symptoms.includes(symptom) && (
+                          <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                {formData.symptoms.length > 0 && (
+                  <div className="mt-6 p-5 bg-purple-600/5 rounded-xl border border-purple-600/10">
+                    <p className="text-sm text-gray-700">
+                      <span className="font-semibold text-purple-600">{formData.symptoms.length} symptom{formData.symptoms.length !== 1 ? 's' : ''} selected</span> — We'll analyze these to provide personalized recommendations
+                    </p>
+                  </div>
+                )}
+
+                {formData.symptoms.length === 0 && (
+                  <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                    <p className="text-sm text-amber-900">
+                      Please select at least one symptom to continue
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Step 3: Lifestyle */}
+            {currentStep === 3 && (
+              <div className="space-y-8 animate-fade-in">
+                <div className="mb-8">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Lifestyle factors</h2>
+                  <p className="text-gray-600">These habits impact your health significantly</p>
+                </div>
+                
+                <div className="space-y-8">
+                  <div className="group">
+                    <label className="block text-sm font-semibold text-gray-900 mb-4">
+                      Average Sleep Hours per Night
+                    </label>
+                    <div className="flex items-center gap-6">
+                      <input
+                        type="range"
+                        min="3"
+                        max="12"
+                        step="0.5"
+                        value={formData.sleepHours}
+                        onChange={(e) => setFormData({ ...formData, sleepHours: parseFloat(e.target.value) })}
+                        className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
+                      />
+                      <span className="text-2xl font-bold text-purple-600 min-w-[70px] text-center">
+                        {formData.sleepHours}h
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-500 mt-3 px-1">
+                      <span>3 hours</span>
+                      <span>12 hours</span>
+                    </div>
+                  </div>
+
+                  <div className="group">
+                    <label className="block text-sm font-semibold text-gray-900 mb-4">
+                      Sleep Quality
+                    </label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {[
+                        { value: 'poor', label: 'Poor' },
+                        { value: 'fair', label: 'Fair' },
+                        { value: 'good', label: 'Good' },
+                        { value: 'excellent', label: 'Excellent' }
+                      ].map((option) => (
+                        <button
+                          key={option.value}
+                          onClick={() => setFormData({ ...formData, sleepQuality: option.value as any })}
+                          className={`p-4 rounded-xl border text-sm font-medium transition-all duration-200 ${
+                            formData.sleepQuality === option.value
+                              ? 'border-purple-600 bg-gradient-to-r from-purple-600 to-violet-500 text-white shadow-md'
+                              : 'border-gray-200 bg-gray-50 hover:border-purple-600/30 hover:bg-white'
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="group">
+                    <label className="block text-sm font-semibold text-gray-900 mb-3">
+                      Exercise Frequency
+                    </label>
+                    <select
+                      value={formData.exerciseFrequency}
+                      onChange={(e) => setFormData({ ...formData, exerciseFrequency: e.target.value as ExerciseFrequency })}
+                      className="w-full px-5 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-600/20 focus:border-purple-600 transition-all duration-200 text-base bg-gray-50 hover:bg-white hover:border-gray-300"
+                    >
+                      <option value="sedentary">Sedentary - Little to no exercise</option>
+                      <option value="light">Light - 1-2 days/week</option>
+                      <option value="moderate">Moderate - 3-4 days/week</option>
+                      <option value="active">Active - 5-6 days/week</option>
+                      <option value="very_active">Very Active - Daily intense exercise</option>
+                    </select>
+                  </div>
+
+                  <div className="group">
+                    <label className="block text-sm font-semibold text-gray-900 mb-4">
+                      Current Stress Level
+                    </label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {[
+                        { value: 'low', label: 'Low' },
+                        { value: 'moderate', label: 'Moderate' },
+                        { value: 'high', label: 'High' },
+                        { value: 'severe', label: 'Severe' }
+                      ].map((option) => (
+                        <button
+                          key={option.value}
+                          onClick={() => setFormData({ ...formData, stressLevel: option.value as StressLevel })}
+                          className={`p-4 rounded-xl border text-sm font-medium transition-all duration-200 ${
+                            formData.stressLevel === option.value
+                              ? 'border-purple-600 bg-gradient-to-r from-purple-600 to-violet-500 text-white shadow-md'
+                              : 'border-gray-200 bg-gray-50 hover:border-purple-600/30 hover:bg-white'
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="group">
+                    <label className="block text-sm font-semibold text-gray-900 mb-3">
+                      Diet Type <span className="text-gray-500 font-normal">(Optional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g., Mediterranean, Vegetarian, Keto"
+                      value={formData.dietType || ''}
+                      onChange={(e) => setFormData({ ...formData, dietType: e.target.value })}
+                      className="w-full px-5 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-600/20 focus:border-purple-600 transition-all duration-200 text-base bg-gray-50 hover:bg-white hover:border-gray-300"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-8 p-5 bg-purple-600/5 rounded-xl border border-purple-600/10">
+                  <p className="text-sm text-gray-700 leading-relaxed">
+                    💡 Lifestyle factors play a crucial role in your overall health and biomarker levels.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Step 4: Health Goals */}
+            {currentStep === 4 && (
+              <div className="space-y-8 animate-fade-in">
+                <div className="mb-8">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Your health goals</h2>
+                  <p className="text-gray-600">Select all that resonate with you (at least one required)</p>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {HEALTH_GOALS.map((goal) => (
+                    <button
+                      key={goal}
+                      onClick={() => toggleGoal(goal)}
+                      className={`p-4 rounded-xl border text-left text-sm font-medium transition-all duration-200 ${
+                        formData.goals.includes(goal)
+                          ? 'border-purple-600 bg-gradient-to-r from-purple-600 to-violet-500 text-white shadow-md'
+                          : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-purple-600/30 hover:bg-white'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <span>{goal}</span>
+                        {formData.goals.includes(goal) && (
+                          <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                {formData.goals.length > 0 && (
+                  <div className="mt-6 p-5 bg-purple-600/5 rounded-xl border border-purple-600/10">
+                    <p className="text-sm text-gray-700">
+                      <span className="font-semibold text-purple-600">{formData.goals.length} goal{formData.goals.length !== 1 ? 's' : ''} selected</span> — We'll create a personalized plan to help you achieve these
+                    </p>
+                  </div>
+                )}
+
+                {formData.goals.length === 0 && (
+                  <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                    <p className="text-sm text-amber-900">
+                      Please select at least one goal to continue
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Step 5: Medical History */}
+            {currentStep === 5 && (
+              <div className="space-y-8 animate-fade-in">
+                <div className="mb-8">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Medical history</h2>
+                  <p className="text-gray-600">Optional — helps us provide better recommendations</p>
+                </div>
+                
+                <div className="space-y-6">
+                  <div className="group">
+                    <label className="block text-sm font-semibold text-gray-900 mb-3">
+                      Current Medications <span className="text-gray-500 font-normal">(Optional)</span>
+                    </label>
+                    <textarea
+                      rows={3}
+                      placeholder="e.g., Levothyroxine, Metformin"
+                      value={formData.medications?.join(', ') || ''}
+                      onChange={(e) => setFormData({ 
+                        ...formData, 
+                        medications: e.target.value.split(',').map(m => m.trim()).filter(m => m) 
+                      })}
+                      className="w-full px-5 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-600/20 focus:border-purple-600 transition-all duration-200 text-base bg-gray-50 hover:bg-white hover:border-gray-300 resize-none"
+                    />
+                  </div>
+
+                  <div className="group">
+                    <label className="block text-sm font-semibold text-gray-900 mb-3">
+                      Supplements <span className="text-gray-500 font-normal">(Optional)</span>
+                    </label>
+                    <textarea
+                      rows={3}
+                      placeholder="e.g., Vitamin D, Iron, Magnesium"
+                      value={formData.supplements?.join(', ') || ''}
+                      onChange={(e) => setFormData({ 
+                        ...formData, 
+                        supplements: e.target.value.split(',').map(s => s.trim()).filter(s => s) 
+                      })}
+                      className="w-full px-5 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-600/20 focus:border-purple-600 transition-all duration-200 text-base bg-gray-50 hover:bg-white hover:border-gray-300 resize-none"
+                    />
+                  </div>
+
+                  <div className="group">
+                    <label className="block text-sm font-semibold text-gray-900 mb-3">
+                      Known Conditions <span className="text-gray-500 font-normal">(Optional)</span>
+                    </label>
+                    <textarea
+                      rows={3}
+                      placeholder="e.g., Hypothyroidism, PCOS, Anemia"
+                      value={formData.conditions?.join(', ') || ''}
+                      onChange={(e) => setFormData({ 
+                        ...formData, 
+                        conditions: e.target.value.split(',').map(c => c.trim()).filter(c => c) 
+                      })}
+                      className="w-full px-5 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-600/20 focus:border-purple-600 transition-all duration-200 text-base bg-gray-50 hover:bg-white hover:border-gray-300 resize-none"
+                    />
+                  </div>
+
+                  <div className="group">
+                    <label className="block text-sm font-semibold text-gray-900 mb-3">
+                      Additional Notes <span className="text-gray-500 font-normal">(Optional)</span>
+                    </label>
+                    <textarea
+                      rows={4}
+                      placeholder="Any other information you'd like to share..."
+                      value={formData.additionalInfo || ''}
+                      onChange={(e) => setFormData({ ...formData, additionalInfo: e.target.value })}
+                      className="w-full px-5 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-600/20 focus:border-purple-600 transition-all duration-200 text-base bg-gray-50 hover:bg-white hover:border-gray-300 resize-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-8 p-5 bg-gradient-to-r from-purple-600 to-violet-500 rounded-xl">
+                  <p className="text-base font-medium text-white">
+                    ✓ You're all set! Click "Get My Analysis" to upload your blood test results
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Navigation Buttons - Clean design */}
+        <div className="flex gap-4">
+          {currentStep > 1 && (
+            <button
+              onClick={handleBack}
+              className="px-8 py-4 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 flex items-center justify-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span>Back</span>
+            </button>
+          )}
+          <button
+            onClick={handleNext}
+            disabled={!canProceed()}
+            className={`flex-1 px-8 py-4 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${
+              canProceed()
+                ? 'bg-gradient-to-r from-purple-600 to-violet-500 text-white hover:shadow-lg'
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            }`}
+          >
+            <span>{currentStep === totalSteps ? 'Get My Analysis' : 'Continue'}</span>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

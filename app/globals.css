@@ -1,0 +1,302 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Brand Colors - Cohesive Purple Theme */
+    --color-primary: #342066;
+    --color-primary-dark: #241647;
+    --color-primary-light: #5a3d99;
+    --color-secondary: #d2f878;
+    --color-accent: #e2fab0;
+    
+    /* Neutral Colors */
+    --color-background: #241647;
+    --color-foreground: #ffffff;
+    --color-muted: #342066;
+    --color-muted-foreground: #9ca3af;
+    --color-border: #342066;
+    --color-input: #342066;
+    --color-ring: #d2f878;
+    
+    /* Shadcn variables mapping */
+    --background: 257 52% 18%; /* #241647 converted to HSL */
+    --foreground: 0 0% 100%;
+    --card: 257 52% 18%;
+    --card-foreground: 0 0% 100%;
+    --popover: 257 52% 18%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 265 51% 26%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 77 89% 72%;
+    --secondary-foreground: 257 52% 18%;
+    --muted: 265 51% 26%;
+    --muted-foreground: 265 20% 80%;
+    --accent: 265 51% 26%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 265 51% 26%;
+    --input: 265 51% 26%;
+    --ring: 77 89% 72%;
+    
+    /* Health score colors */
+    --color-health-excellent: #10b981;
+    --color-health-good: #84cc16;
+    --color-health-fair: #f59e0b;
+    --color-health-poor: #ef4444;
+    
+    --radius: 0.75rem;
+  }
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+body {
+  color: #ffffff;
+  background-color: #241647;
+  background-image: none;
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Custom gradient classes - Cohesive Purple Theme */
+.gradient-aurelia {
+  background: linear-gradient(135deg, #342066 0%, #5a3d99 100%);
+}
+
+.gradient-aurelia-text {
+  background: linear-gradient(135deg, #342066 0%, #5a3d99 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-aurelia-lime {
+  background: linear-gradient(135deg, #d2f878 0%, #e2fab0 100%);
+}
+
+.gradient-aurelia-text-lime {
+  background: linear-gradient(135deg, #d2f878 0%, #e2fab0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-aurelia-bg {
+  background: linear-gradient(135deg, #241647 0%, #342066 100%);
+}
+
+.gradient-aurelia-subtle {
+  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+}
+
+/* Health score styling */
+.health-score-excellent {
+  color: var(--color-health-excellent);
+}
+
+.health-score-good {
+  color: var(--color-health-good);
+}
+
+.health-score-fair {
+  color: var(--color-health-fair);
+}
+
+.health-score-poor {
+  color: var(--color-health-poor);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.4s ease-out;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.4s ease-out;
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s ease-out;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-bounce-slow {
+  animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(210, 248, 120, 0.3), transparent);
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
+}
+
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out;
+}
+
+@keyframes checkmark {
+  0% {
+    stroke-dashoffset: 100;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-checkmark {
+  stroke-dasharray: 100;
+  animation: checkmark 0.5s ease-out forwards;
+}
+
+@keyframes confetti {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.animate-confetti {
+  animation: confetti 3s ease-out forwards;
+}
+
+@keyframes progressFill {
+  from {
+    width: 0%;
+  }
+}
+
+.animate-progress {
+  animation: progressFill 0.8s ease-out;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-muted);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-muted-foreground);
+  border-radius: var(--radius);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #342066;
+}
