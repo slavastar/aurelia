@@ -1,10 +1,15 @@
 """FastAPI server for AURELIA Health Coach."""
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, File, UploadFile
 from fastapi.responses import JSONResponse
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import json
 from datetime import datetime
+from PIL import Image
+import torch
+from transformers import ViTImageProcessor, ViTForImageClassification
+import torch.nn.functional as F
+import io
 
 from health_coach import HealthCoach
 from schemas import (
@@ -19,6 +24,51 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Load age prediction model at startup
+print("Loading age prediction model...")
+model_name = "nateraw/vit-age-classifier"
+processor = ViTImageProcessor.from_pretrained(model_name)
+age_model = ViTForImageClassification.from_pretrained(model_name)
+print(f"Age prediction model loaded successfully.")
+
+
+def parse_age_range(age_label: str) -> tuple:
+    """Parse age range label to get min and max ages."""
+    if age_label == "more than 70":
+        return 70, 85
+    elif "-" in age_label:
+        parts = age_label.split("-")
+        return int(parts[0]), int(parts[1])
+    else:
+        age = int(age_label)
+        return age, age
+
+
+def predict_skin_age(image: Image.Image) -> float:
+    """Predict skin age from face photo."""
+    image = image.convert("RGB")
+    inputs = processor(images=image, return_tensors="pt")
+    
+    with torch.no_grad():
+        outputs = age_model(**inputs)
+        logits = outputs.logits
+    
+    probs = F.softmax(logits, dim=-1)[0]
+    
+    # Get all age ranges and their probabilities
+    age_ranges = []
+    for idx, prob in enumerate(probs):
+        age_label = age_model.config.id2label[idx]
+        min_age, max_age = parse_age_range(age_label)
+        age_ranges.append({
+            'mid': (min_age + max_age) / 2,
+            'prob': prob.item()
+        })
+    
+    # Calculate weighted average
+    weighted_age = sum(r['mid'] * r['prob'] for r in age_ranges)
+    return round(weighted_age, 1)
+
 
 @app.get("/")
 async def root():
@@ -31,18 +81,39 @@ async def root():
 
 
 @app.post("/generate-report", response_model=Dict[str, Any])
-async def generate_report(profile: HealthProfile):
+async def generate_report(
+    profile: HealthProfile,
+    face_photo: Optional[UploadFile] = File(None)
+):
     """
     Generate a comprehensive health optimization report.
     
     Args:
         profile: User's health profile with biomarkers and lifestyle data
+        face_photo: Optional face photo for skin age estimation
         
     Returns:
         Complete health report with recommendations, supplement protocol,
         and monitoring plan
     """
     try:
+        # Process face photo if provided
+        if face_photo:
+            if not face_photo.content_type.startswith('image/'):
+                raise HTTPException(
+                    status_code=400,
+                    detail="Face photo must be an image file"
+                )
+            
+            try:
+                contents = await face_photo.read()
+                image = Image.open(io.BytesIO(contents))
+                skin_age = predict_skin_age(image)
+                profile.skin_age = skin_age
+                print(f"Estimated skin age: {skin_age} years")
+            except Exception as e:
+                print(f"Warning: Could not process face photo: {e}")
+        
         # Initialize health coach
         coach = HealthCoach()
         

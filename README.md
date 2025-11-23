@@ -3,7 +3,7 @@
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-An intelligent AI health coach that analyzes your biomarkers, lifestyle data, and biological age to generate personalized, evidence-based health optimization plans with cited research sources.
+An intelligent AI health coach that analyzes your biomarkers, lifestyle data, biological age, and facial appearance to generate personalized, evidence-based health optimization plans with cited research sources.
 
 ## 🌟 Features
 
@@ -12,6 +12,7 @@ An intelligent AI health coach that analyzes your biomarkers, lifestyle data, an
 - **🎯 Personalized Recommendations**: Tailored diet, exercise, and supplement protocols
 - **📚 Source Citations**: Every recommendation backed by credible URLs
 - **🔄 Biological Age Tracking**: Analyzes age acceleration and reversal strategies
+- **📸 Skin Age Estimation**: Optional face photo analysis to estimate biological skin age
 - **💾 Structured Output**: JSON reports with health assessment, interventions, and monitoring plans
 
 ## 🚀 Quick Start
@@ -43,7 +44,16 @@ python api.py
 # Interactive docs: http://localhost:8000/docs
 ```
 
-See [API.md](API.md) for complete API documentation.
+**Optional Face Photo Analysis:**
+```python
+import requests
+
+# With face photo
+files = {'face_photo': open('face.jpg', 'rb')}
+data = {'profile': profile_json}
+response = requests.post('http://localhost:8000/generate-report', 
+                        data=data, files=files)
+```
 
 ## 📋 What It Does
 
@@ -78,19 +88,21 @@ AURELIA analyzes your health data and:
 ## 🛠️ Technology Stack
 
 - **AI Model**: moonshotai/Kimi-K2-Instruct via NetMind AI
+- **Age Estimation**: Vision Transformer (ViT) for facial age prediction
 - **Search**: DuckDuckGo (medical research, health databases)
 - **Community**: Reddit API (success stories, protocols)
 - **Framework**: OpenAI function calling with iterative tool use
+- **API**: FastAPI with multipart file upload support
 - **Type Safety**: Pydantic models for data validation
 - **Architecture**: Clean, modular design with separated concerns
 
-## 📖 Documentation
+## 📖 Usage
 
-See [USAGE.md](USAGE.md) for detailed documentation on:
-- Configuration options
-- Custom health profiles
-- API usage examples
-- Output format specification
+The API accepts:
+- **Required**: Health profile JSON (age, biomarkers, lifestyle)
+- **Optional**: Face photo (JPEG/PNG) for skin age estimation
+
+When a face photo is provided, AURELIA estimates your skin's biological age and includes it in the analysis alongside blood biomarkers and chronological age.
 
 ## 🎯 Use Cases
 

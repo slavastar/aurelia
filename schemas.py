@@ -13,6 +13,9 @@ class HealthProfile(BaseModel):
     bioage: float
     lifestyle_quiz: dict
     biomarkers: dict
+    skin_age: Optional[float] = None  # Estimated age from face photo analysis
+
+
 
 
 class Source(BaseModel):
