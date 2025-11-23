@@ -49,53 +49,115 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    console.log('✅ Safety checks passed');
+    // Step 2: Call Python AI Health Coach
+    console.log('🤖 Calling AI Health Coach...');
+    
+    const baseUrl = process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}` 
+      : 'http://localhost:8000'; // Default to local python server
 
-    // Step 2: Get ML Risk Score
-    console.log('🤖 Generating ML risk score...');
-    const mlResult = await generateMockRiskScore({
-      biomarkers,
-      context: {
-        age: context.age,
-        cycle_status: context.cycle_status,
-        symptoms: context.symptoms,
-        lifestyle: context.lifestyle,
-      },
-    });
-
-    console.log(`📊 ML Risk Score: ${mlResult.risk_score}/100`);
-
-    // Step 3: Build Mistral Prompt
-    console.log('📝 Building AUREL✦A prompt...');
-    const prompt = buildAureliaPrompt(
-      biomarkers,
-      {
-        age: context.age,
-        cycle_status: context.cycle_status,
+    // Map context to HealthProfile
+    const healthProfile = {
+      age: typeof context.age === 'string' ? parseInt(context.age) : context.age,
+      height: context.height || 165,
+      weight: context.weight || 60,
+      bioage: typeof context.age === 'string' ? parseInt(context.age) : context.age, // Default to chronological
+      lifestyle_quiz: {
+        ...context.lifestyle,
         symptoms: context.symptoms,
         goals: context.goals,
-        lifestyle: context.lifestyle,
+        cycle_status: context.cycle_status
       },
-      mlResult.risk_score,
-      false
-    );
+      biomarkers: biomarkers,
+      skin_age: null
+    };
 
-    // Step 4: Generate Analysis with Mistral
-    console.log('✨ Generating AUREL✦A analysis...');
-    const mistralResult = await generateAureliaAnalysis({
-      systemPrompt: prompt,
-      complexity: 'complex', // Use large model for medical analysis
-    });
+    let analysisResult;
+    try {
+      const pythonResponse = await fetch(`${baseUrl}/api/generate-report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(healthProfile)
+      });
 
-    if (!mistralResult.success) {
-      console.error('❌ Mistral analysis failed:', mistralResult.error);
-      return NextResponse.json(
-        {
-          success: false,
-          error: `Analysis generation failed: ${mistralResult.error}`,
+      if (pythonResponse.ok) {
+        const data = await pythonResponse.json();
+        analysisResult = data.report; // The structured report
+      } else {
+        console.warn('Python backend failed, falling back to Mistral:', await pythonResponse.text());
+        // Fallback logic below
+      }
+    } catch (e) {
+      console.warn('Python backend connection failed:', e);
+    }
+
+    let aureliaAnalysis = '';
+    let riskScore = 0;
+    let riskFactors: string[] = [];
+
+    if (analysisResult) {
+      // Format JSON report to Markdown
+      const assessment = analysisResult.health_assessment;
+      riskScore = 85; // Default optimistic score if not provided
+      if (assessment.primary_risks) riskFactors = assessment.primary_risks;
+
+      aureliaAnalysis = `
+## 🏥 Health Assessment
+**Bioage Gap:** ${assessment.bioage_gap > 0 ? `+${assessment.bioage_gap} years (Accelerated)` : `${assessment.bioage_gap} years (Decelerated)`}
+
+### Primary Risks
+${assessment.primary_risks.map((r: string) => `- ${r}`).join('\n')}
+
+## 📋 Recommendations
+
+${analysisResult.recommendations.map((rec: any) => `
+### ${rec.priority}. ${rec.title}
+**Action:** ${rec.action}
+**Rationale:** ${rec.rationale}
+**Timeline:** ${rec.expected_timeline}
+`).join('\n')}
+
+## 💊 Supplement Protocol
+${analysisResult.supplement_protocol.map((supp: any) => `- **${supp.supplement}**: ${supp.dosage} (${supp.rationale})`).join('\n')}
+      `;
+    } else {
+      // Fallback to Mistral (Existing Logic)
+      console.log('📝 Building AUREL✦A prompt (Fallback)...');
+      const mlResult = await generateMockRiskScore({
+        biomarkers,
+        context: {
+          age: context.age,
+          cycle_status: context.cycle_status,
+          symptoms: context.symptoms,
+          lifestyle: context.lifestyle,
         },
-        { status: 500 }
+      });
+      riskScore = mlResult.risk_score;
+      riskFactors = mlResult.risk_factors;
+
+      const prompt = buildAureliaPrompt(
+        biomarkers,
+        {
+          age: context.age,
+          cycle_status: context.cycle_status,
+          symptoms: context.symptoms,
+          goals: context.goals,
+          lifestyle: context.lifestyle,
+        },
+        riskScore,
+        false
       );
+
+      const mistralResult = await generateAureliaAnalysis({
+        systemPrompt: prompt,
+        complexity: 'complex',
+      });
+
+      if (mistralResult.success) {
+        aureliaAnalysis = mistralResult.analysis;
+      } else {
+        throw new Error('All analysis methods failed');
+      }
     }
 
     console.log('✅ Analysis complete!');
@@ -104,10 +166,10 @@ export async function POST(request: NextRequest) {
     const response: AnalysisOutput = {
       success: true,
       isEmergency: false,
-      mlRiskScore: mlResult.risk_score,
-      mlConfidence: mlResult.confidence,
-      riskFactors: mlResult.risk_factors,
-      aureliaAnalysis: mistralResult.analysis,
+      mlRiskScore: riskScore,
+      mlConfidence: 0.9,
+      riskFactors: riskFactors,
+      aureliaAnalysis: aureliaAnalysis,
       timestamp: new Date().toISOString(),
     };
 

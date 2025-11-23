@@ -83,6 +83,17 @@ export default function ResultsPage() {
         symptoms.push(`Deficiency: ${questionnaire.nutritionalDeficiencies}`);
       }
 
+      // Parse age
+      let age = 30; // Default
+      if (questionnaire.ageRange) {
+        const match = questionnaire.ageRange.match(/(\d+)/);
+        if (match) age = parseInt(match[0]);
+      }
+
+      // Parse height and weight
+      const height = parseInt(questionnaire.height) || 165;
+      const weight = parseInt(questionnaire.weight) || 60;
+
       const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: {
@@ -91,7 +102,9 @@ export default function ResultsPage() {
         body: JSON.stringify({
           biomarkers,
           context: {
-            age: questionnaire.ageRange, // Mapped from ageRange
+            age: age,
+            height: height,
+            weight: weight,
             cycle_status: cycleStatus,
             symptoms: symptoms,
             goals: questionnaire.goals || questionnaire.primaryGoals,

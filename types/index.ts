@@ -100,6 +100,8 @@ export type StressLevel = 'low' | 'moderate' | 'high' | 'severe';
 
 export interface UserContext {
   age: number;
+  height?: number; // cm
+  weight?: number; // kg
   cycle_status?: CycleStatus;
   symptoms: string[];
   goals: string[];
