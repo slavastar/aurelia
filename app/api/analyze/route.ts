@@ -52,9 +52,12 @@ export async function POST(request: NextRequest) {
     // Step 2: Call Python AI Health Coach
     console.log('🤖 Calling AI Health Coach...');
 
-    const baseUrl = process.env.VERCEL_URL
+    const isVercel = !!process.env.VERCEL_URL;
+    const baseUrl = isVercel
       ? `https://${process.env.VERCEL_URL}`
       : 'http://localhost:8000'; // Default to local python server
+    
+    const apiPath = isVercel ? '/api/py' : '';
 
     // Map context to HealthProfile
     const healthProfile = {
@@ -79,8 +82,7 @@ export async function POST(request: NextRequest) {
       if (context.face_photo) {
         // If photo exists, use the photo endpoint with multipart/form-data
         const formData = new FormData();
-        formData.append('profile', JSON.stringify(healthProfile));
-
+        
         // Convert base64 to blob
         const base64Data = context.face_photo.split(',')[1];
         const binaryData = Buffer.from(base64Data, 'base64');
@@ -89,13 +91,13 @@ export async function POST(request: NextRequest) {
         formData.append('profile_json', JSON.stringify(healthProfile));
         formData.append('face_photo', blob, 'face.jpg');
 
-        pythonResponse = await fetch(`${baseUrl}/api/py/generate-report-with-photo`, {
+        pythonResponse = await fetch(`${baseUrl}${apiPath}/generate-report-with-photo`, {
           method: 'POST',
           body: formData,
         });
       } else {
         // Standard JSON endpoint
-        pythonResponse = await fetch(`${baseUrl}/api/py/generate-report`, {
+        pythonResponse = await fetch(`${baseUrl}${apiPath}/generate-report`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(healthProfile)
