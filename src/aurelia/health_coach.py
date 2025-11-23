@@ -70,6 +70,38 @@ class HealthCoach:
                 }
             }
         }
+        
+        self.biomarker_lookup_tool = {
+            "type": "function",
+            "function": {
+                "name": "biomarker_lookup",
+                "description": "Look up reference ranges, units, and clinical information for biomarkers not in the reference database. Searches medical sources for age-specific and gender-specific normal ranges. Use this when you encounter an unfamiliar biomarker or need more detailed context about ranges for specific patient demographics.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "biomarker_name": {
+                            "type": "string",
+                            "description": "Name of the biomarker to look up (e.g., 'ferritin', 'vitamin B12', 'cortisol')"
+                        },
+                        "age": {
+                            "type": "integer",
+                            "description": "Patient age for age-specific ranges (optional)"
+                        },
+                        "gender": {
+                            "type": "string",
+                            "enum": ["female", "male"],
+                            "description": "Patient gender for gender-specific ranges",
+                            "default": "female"
+                        },
+                        "is_menstruating": {
+                            "type": "boolean",
+                            "description": "Whether patient is menstruating (relevant for iron-related markers)"
+                        }
+                    },
+                    "required": ["biomarker_name"]
+                }
+            }
+        }
     
     def set_health_profile(self, profile_dict: Dict[str, Any]):
         """Set user's health profile and initialize conversation context."""
@@ -257,7 +289,7 @@ IMPORTANT NOTES:
                 messages_to_send = self._trim_messages()
                 
                 # Shuffle tools to avoid first-tool bias
-                tools = [self.web_search_tool, self.reddit_search_tool]
+                tools = [self.web_search_tool, self.reddit_search_tool, self.biomarker_lookup_tool]
                 random.shuffle(tools)
                 
                 response = self.client.chat.completions.create(
@@ -363,6 +395,21 @@ IMPORTANT NOTES:
                 max_results = function_args.get("max_results", 5)
                 print(f"  → Reddit Search: '{query}'")
                 result = SearchTools.reddit_search(query, max_results)
+                
+                self.messages.append({
+                    "tool_call_id": tool_call.id,
+                    "role": "tool",
+                    "name": function_name,
+                    "content": json.dumps(result)
+                })
+            
+            elif function_name == "biomarker_lookup":
+                biomarker_name = function_args.get("biomarker_name")
+                age = function_args.get("age")
+                gender = function_args.get("gender", "female")
+                is_menstruating = function_args.get("is_menstruating")
+                print(f"  → Biomarker Lookup: '{biomarker_name}' (age={age}, gender={gender})")
+                result = SearchTools.biomarker_lookup(biomarker_name, age, gender, is_menstruating)
                 
                 self.messages.append({
                     "tool_call_id": tool_call.id,

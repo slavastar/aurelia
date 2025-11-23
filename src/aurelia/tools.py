@@ -11,6 +11,94 @@ class SearchTools:
     """Collection of search tools for health research."""
     
     @staticmethod
+    def biomarker_lookup(biomarker_name: str, age: int = None, gender: str = "female", is_menstruating: bool = None) -> Dict[str, Any]:
+        """
+        Search for biomarker reference ranges and clinical information.
+        
+        Looks up normal ranges, units, and clinical significance for biomarkers
+        that may not be in the reference database. Uses web search to find
+        age-specific and gender-specific reference ranges.
+        
+        Args:
+            biomarker_name: Name of the biomarker (e.g., "ferritin", "vitamin B12")
+            age: Patient age for age-specific ranges (optional)
+            gender: Patient gender for gender-specific ranges (default: "female")
+            is_menstruating: Whether patient is menstruating (for iron-related markers)
+            
+        Returns:
+            Dictionary with biomarker information including ranges, units, and clinical notes
+        """
+        try:
+            # Build search query with context
+            query_parts = [biomarker_name, "normal range", "reference range"]
+            
+            if age:
+                if age < 50:
+                    query_parts.append("premenopausal women" if gender == "female" else "men")
+                else:
+                    query_parts.append("postmenopausal women" if gender == "female" else "older men")
+            elif gender:
+                query_parts.append(f"{gender}s")
+            
+            if is_menstruating is not None:
+                query_parts.append("menstruating" if is_menstruating else "non-menstruating")
+            
+            query_parts.extend(["clinical significance", "units"])
+            query = " ".join(query_parts)
+            
+            # Use DuckDuckGo to search
+            ddgs = DDGS()
+            results = list(ddgs.text(query, max_results=5))
+            
+            # Format results
+            formatted_results = []
+            for result in results:
+                formatted_results.append({
+                    "title": result.get("title", ""),
+                    "href": result.get("href", ""),
+                    "body": result.get("body", "")
+                })
+            
+            # Build summary
+            summary = f"Biomarker lookup for '{biomarker_name}'\n"
+            if age:
+                summary += f"Age: {age} years, "
+            summary += f"Gender: {gender}\n"
+            if is_menstruating is not None:
+                summary += f"Menstruating: {'yes' if is_menstruating else 'no'}\n"
+            summary += "\nSearch Results:\n\n"
+            
+            for i, result in enumerate(formatted_results, 1):
+                summary += f"{i}. {result['title']}\n   {result['body']}\n   {result['href']}\n\n"
+            
+            return {
+                "biomarker": biomarker_name,
+                "query": query,
+                "summary": summary,
+                "results": formatted_results,
+                "count": len(formatted_results),
+                "context": {
+                    "age": age,
+                    "gender": gender,
+                    "is_menstruating": is_menstruating
+                }
+            }
+            
+        except Exception as e:
+            return {
+                "biomarker": biomarker_name,
+                "query": query if 'query' in locals() else biomarker_name,
+                "summary": f"Error looking up biomarker: {str(e)}",
+                "results": [],
+                "count": 0,
+                "context": {
+                    "age": age,
+                    "gender": gender,
+                    "is_menstruating": is_menstruating
+                }
+            }
+    
+    @staticmethod
     def web_search(query: str, max_results: int = 5) -> Dict[str, Any]:
         """
         Search the web using DuckDuckGo.
