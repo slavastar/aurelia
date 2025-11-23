@@ -1,6 +1,7 @@
 """FastAPI server for AURELIA Health Coach."""
 
 from fastapi import FastAPI, HTTPException, File, UploadFile, Form
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from typing import Dict, Any, Optional
 import json
@@ -36,6 +37,15 @@ app = FastAPI(
     title="AURELIA Health Coach API",
     description="AI-powered health optimization with evidence-based recommendations",
     version="1.0.0"
+)
+
+# Add CORS middleware to allow web client access
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins for testing
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Load age prediction model at startup
@@ -170,7 +180,7 @@ async def generate_report(profile: HealthProfile):
             # Parse JSON and adapt to schema
             report_data = json.loads(content)
             
-            from json_adapter import adapt_model_json_to_schema
+            from .json_adapter import adapt_model_json_to_schema
             adapted_data = adapt_model_json_to_schema(report_data)
             
             health_report = HealthReport(**adapted_data)
@@ -278,7 +288,7 @@ async def generate_report_with_photo(
         content = content.strip()
         
         report_data = json.loads(content)
-        from json_adapter import adapt_model_json_to_schema
+        from .json_adapter import adapt_model_json_to_schema
         
         # Debug: save raw report
         with open("debug_raw_report.json", "w") as f:
