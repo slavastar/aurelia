@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
 
     console.log(`📊 ML Risk Score: ${mlResult.risk_score}/100`);
 
-    // Step 3: Build Gemini Prompt
+    // Step 3: Build Mistral Prompt
     console.log('📝 Building AUREL✦A prompt...');
     const prompt = buildAureliaPrompt(
       biomarkers,
@@ -77,18 +77,19 @@ export async function POST(request: NextRequest) {
       false
     );
 
-    // Step 4: Generate Analysis with Gemini
+    // Step 4: Generate Analysis with Mistral
     console.log('✨ Generating AUREL✦A analysis...');
-    const geminiResult = await generateAureliaAnalysis({
+    const mistralResult = await generateAureliaAnalysis({
       systemPrompt: prompt,
+      complexity: 'complex', // Use large model for medical analysis
     });
 
-    if (!geminiResult.success) {
-      console.error('❌ Gemini analysis failed:', geminiResult.error);
+    if (!mistralResult.success) {
+      console.error('❌ Mistral analysis failed:', mistralResult.error);
       return NextResponse.json(
         {
           success: false,
-          error: `Analysis generation failed: ${geminiResult.error}`,
+          error: `Analysis generation failed: ${mistralResult.error}`,
         },
         { status: 500 }
       );
@@ -103,7 +104,7 @@ export async function POST(request: NextRequest) {
       mlRiskScore: mlResult.risk_score,
       mlConfidence: mlResult.confidence,
       riskFactors: mlResult.risk_factors,
-      aureliaAnalysis: geminiResult.analysis,
+      aureliaAnalysis: mistralResult.analysis,
       timestamp: new Date().toISOString(),
     };
 

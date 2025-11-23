@@ -11,11 +11,13 @@ if (!process.env.MISTRAL_API_KEY) {
 
 const client = new Mistral({
   apiKey: process.env.MISTRAL_API_KEY || '',
+  timeoutMs: 60000, // 60 seconds timeout
 });
 
 export interface MistralAnalysisRequest {
   systemPrompt: string;
   userMessage?: string;
+  complexity?: 'simple' | 'medium' | 'complex';
 }
 
 export interface MistralAnalysisResponse {
@@ -66,8 +68,17 @@ export async function generateAureliaAnalysis(
     ] as any;
 
 
+    // Determine model based on complexity
+    let model = 'mistral-large-latest'; // Default for complex/medical tasks
+    
+    if (request.complexity === 'simple') {
+      model = 'mistral-small-latest';
+    } else if (request.complexity === 'medium') {
+      model = 'open-mixtral-8x22b'; // Good balance
+    }
+
     const result = await client.chat.complete({
-      model: 'mistral-large-latest',
+      model: model,
       messages: chatMessages,
       temperature: 0.7,
       topP: 0.95,
