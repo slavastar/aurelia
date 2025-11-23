@@ -41,7 +41,7 @@ class HealthProfile(BaseModel):
     age: int
     height: int  # cm
     weight: int  # kg
-    bioage: float
+    bioage: Optional[float] = None  # Optional for backwards compatibility
     lifestyle_quiz: dict
     biomarkers: dict  # Can be simple dict or enriched with descriptions
     biomarkers_with_descriptions: Optional[dict] = None  # Enriched biomarker data with units/ranges
@@ -109,8 +109,8 @@ class BiomarkerFinding(BaseModel):
 
 class HealthAssessment(BaseModel):
     """Overall health assessment."""
-    bioage_gap: float
-    bioage_gap_description: str
+    bioage_gap: Optional[float] = None  # Optional for backwards compatibility  
+    bioage_gap_description: Optional[str] = None  # Optional for backwards compatibility
     key_findings: List[BiomarkerFinding]
     overall_health_status: str
     primary_risks: List[str]

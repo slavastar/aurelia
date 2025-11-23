@@ -267,10 +267,12 @@
                         <label>Weight (kg) *</label>
                         <input type="number" id="weight" value="63" required>
                     </div>
-                    <div class="form-group">
-                        <label>Biological Age</label>
-                        <input type="number" step="0.1" id="bioage" value="31.2">
-                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Face Photo (for skin age analysis)</label>
+                    <input type="file" id="face_photo" accept="image/*">
+                    <small style="color: #888;">Optional: Upload a clear face photo for skin age estimation</small>
                 </div>
                 
                 <div class="form-group">
@@ -326,6 +328,53 @@
                     </div>
                 </div>
                 
+                <h3 style="margin: 30px 0 20px;">🧪 Additional Biomarkers</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>TSH (Thyroid)</label>
+                        <input type="text" id="tsh" placeholder="e.g., 2.5 mIU/L">
+                    </div>
+                    <div class="form-group">
+                        <label>Free T3</label>
+                        <input type="text" id="free_t3" placeholder="e.g., 3.2 pg/mL">
+                    </div>
+                    <div class="form-group">
+                        <label>Free T4</label>
+                        <input type="text" id="free_t4" placeholder="e.g., 1.2 ng/dL">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Cortisol</label>
+                        <input type="text" id="cortisol" placeholder="e.g., 15 µg/dL">
+                    </div>
+                    <div class="form-group">
+                        <label>Testosterone</label>
+                        <input type="text" id="testosterone" placeholder="e.g., 500 ng/dL">
+                    </div>
+                    <div class="form-group">
+                        <label>Estradiol</label>
+                        <input type="text" id="estradiol" placeholder="e.g., 100 pg/mL">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Vitamin B12</label>
+                        <input type="text" id="vitamin_b12" placeholder="e.g., 450 pg/mL">
+                    </div>
+                    <div class="form-group">
+                        <label>Folate</label>
+                        <input type="text" id="folate" placeholder="e.g., 12 ng/mL">
+                    </div>
+                    <div class="form-group">
+                        <label>Magnesium</label>
+                        <input type="text" id="magnesium" placeholder="e.g., 2.1 mg/dL">
+                    </div>
+                </div>
+                
                 <button type="submit" class="btn" id="submitBtn">
                     Generate Health Report 🚀
                 </button>
@@ -353,28 +402,38 @@
         document.getElementById('healthForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // Collect form data
+            // Collect biomarkers (including new ones)
+            const biomarkers = {
+                fasting_glucose: document.getElementById('glucose').value,
+                fasting_insulin: document.getElementById('insulin').value,
+                HbA1c: document.getElementById('hba1c').value,
+                HDL_cholesterol: document.getElementById('hdl').value,
+                LDL_cholesterol: document.getElementById('ldl').value,
+                triglycerides: document.getElementById('triglycerides').value,
+                ferritin: document.getElementById('ferritin').value,
+                vitamin_d: document.getElementById('vitamin_d').value,
+                hscrp: document.getElementById('hscrp').value,
+            };
+            
+            // Add additional biomarkers if filled
+            const additionalFields = ['tsh', 'free_t3', 'free_t4', 'cortisol', 'testosterone', 'estradiol', 'vitamin_b12', 'folate', 'magnesium'];
+            additionalFields.forEach(field => {
+                const value = document.getElementById(field).value.trim();
+                if (value) {
+                    biomarkers[field] = value;
+                }
+            });
+            
             const profile = {
                 age: parseInt(document.getElementById('age').value),
                 height: parseInt(document.getElementById('height').value),
                 weight: parseInt(document.getElementById('weight').value),
-                bioage: parseFloat(document.getElementById('bioage').value),
                 lifestyle_quiz: {
                     name: "Test User",
                     sleep_duration: "7-8 hours",
                     stress_level: "moderate"
                 },
-                biomarkers: {
-                    fasting_glucose: document.getElementById('glucose').value,
-                    fasting_insulin: document.getElementById('insulin').value,
-                    HbA1c: document.getElementById('hba1c').value,
-                    HDL_cholesterol: document.getElementById('hdl').value,
-                    LDL_cholesterol: document.getElementById('ldl').value,
-                    triglycerides: document.getElementById('triglycerides').value,
-                    ferritin: document.getElementById('ferritin').value,
-                    vitamin_d: document.getElementById('vitamin_d').value,
-                    hscrp: document.getElementById('hscrp').value,
-                },
+                biomarkers: biomarkers,
                 is_menstruating: document.getElementById('is_menstruating').checked
             };
             
@@ -384,13 +443,29 @@
             document.getElementById('resultsDiv').style.display = 'none';
             
             try {
-                const response = await fetch(`${API_URL}/generate-report`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(profile)
-                });
+                const facePhoto = document.getElementById('face_photo').files[0];
+                let response;
+                
+                if (facePhoto) {
+                    // Use photo endpoint if photo is uploaded
+                    const formData = new FormData();
+                    formData.append('profile_json', JSON.stringify(profile));
+                    formData.append('face_photo', facePhoto);
+                    
+                    response = await fetch(`${API_URL}/generate-report-with-photo`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                } else {
+                    // Use regular endpoint if no photo
+                    response = await fetch(`${API_URL}/generate-report`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(profile)
+                    });
+                }
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -417,6 +492,17 @@
             const report = data.report || {};
             
             let html = '';
+            
+            // Skin Age (if photo was uploaded)
+            if (profile.skin_age) {
+                html += `
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 25px; border-radius: 15px; margin: 20px 0; color: white; text-align: center;">
+                        <h3 style="color: white; margin: 0 0 10px 0;">🧬 Estimated Skin Age</h3>
+                        <p style="font-size: 2.5em; font-weight: bold; margin: 10px 0;">${profile.skin_age} years</p>
+                        <p style="margin: 10px 0 0 0; opacity: 0.9;">Chronological Age: ${profile.age} years</p>
+                    </div>
+                `;
+            }
             
             // Scores
             if (profile.metabolic_score || profile.inflammation_score || profile.oxygen_score) {
@@ -462,7 +548,6 @@
                     <div style="background: #f8f9fa; padding: 25px; border-radius: 15px; margin: 20px 0;">
                         <h3>🔍 Health Assessment</h3>
                         <p style="margin: 15px 0; font-size: 1.1em;">${assessment.overall_health_status}</p>
-                        <p><strong>Biological Age Gap:</strong> ${assessment.bioage_gap_description}</p>
                     </div>
                 `;
             }

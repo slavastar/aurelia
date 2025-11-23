@@ -177,6 +177,9 @@ async def generate_report(profile: HealthProfile):
                 content = content[:-3]  # Remove trailing ```
             content = content.strip()
             
+            # Debug: print first 500 chars of response
+            print(f"AI Response (first 500 chars): {content[:500]}")
+            
             # Parse JSON and adapt to schema
             report_data = json.loads(content)
             
@@ -201,12 +204,18 @@ async def generate_report(profile: HealthProfile):
                 "text_content": report_content
             }
         except Exception as parse_error:
+            import traceback
+            error_trace = traceback.format_exc()
+            print(f"ERROR parsing report: {error_trace}")
             raise HTTPException(
                 status_code=500,
                 detail=f"Failed to parse report: {str(parse_error)}"
             )
     
     except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"ERROR in generate_report: {error_trace}")
         raise HTTPException(
             status_code=500,
             detail=f"Error generating report: {str(e)}"

@@ -147,15 +147,18 @@ Your goal is to generate a comprehensive, evidence-based health optimization rep
         """Format health profile into readable summary."""
         parts = ["USER HEALTH PROFILE:"]
         
-        age_diff = profile.bioage - profile.age
         bmi = profile.weight / ((profile.height/100) ** 2)
         
         parts.extend([
             f"\nAge: {profile.age} years",
-            f"Biological Age: {profile.bioage:.1f} years (Delta: {age_diff:+.1f} years)",
             f"Height: {profile.height} cm, Weight: {profile.weight} kg, BMI: {bmi:.1f}",
-            "\nLIFESTYLE FACTORS:"
         ])
+        
+        # Add skin age if available
+        if profile.skin_age:
+            parts.append(f"Estimated Skin Age: {profile.skin_age:.1f} years")
+        
+        parts.append("\nLIFESTYLE FACTORS:")
         
         for key, value in profile.lifestyle_quiz.items():
             parts.append(f"  - {key}: {value}")
@@ -207,8 +210,6 @@ CRITICAL REQUIREMENT: Your response MUST be a JSON object with EXACTLY these 4 t
 
 {
   "health_assessment": {
-    "bioage_gap": <float: difference between bioage and age>,
-    "bioage_gap_description": "<string describing the gap>",
     "key_findings": [
       {
         "biomarker": "<biomarker name>",
@@ -273,7 +274,7 @@ IMPORTANT NOTES:
         
         return self._generate_with_tools(prompt)
     
-    def _generate_with_tools(self, prompt: str, max_iterations: int = 6) -> str:
+    def _generate_with_tools(self, prompt: str, max_iterations: int = 3) -> str:
         """Generate response with iterative tool calling."""
         try:
             self.messages.append({"role": "user", "content": prompt})

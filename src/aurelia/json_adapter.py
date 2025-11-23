@@ -51,13 +51,19 @@ def _extract_health_assessment(data: Dict) -> Dict:
     # Build from biological_age_analysis or similar
     bioage_info = data.get("biological_age_analysis", {})
     
-    return {
-        "bioage_gap": _extract_bioage_gap(data),
-        "bioage_gap_description": bioage_info.get("current_status", "Biological age analysis needed"),
+    result = {
         "key_findings": _extract_key_findings(data),
         "overall_health_status": bioage_info.get("reversal_potential", "Assessment needed"),
         "primary_risks": bioage_info.get("primary_drivers", [])
     }
+    
+    # Add bioage fields only if present (backwards compatibility)
+    bioage_gap = _extract_bioage_gap(data)
+    if bioage_gap != 0.0:
+        result["bioage_gap"] = bioage_gap
+        result["bioage_gap_description"] = bioage_info.get("current_status", "Biological age analysis needed")
+    
+    return result
 
 
 def _extract_bioage_gap(data: Dict) -> float:
