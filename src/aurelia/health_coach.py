@@ -8,8 +8,8 @@ from datetime import datetime
 from openai import OpenAI
 from dotenv import load_dotenv
 
-from schemas import HealthProfile, HealthReport, HealthReportWithMetadata
-from tools import SearchTools
+from .schemas import HealthProfile, HealthReport, HealthReportWithMetadata
+from .tools import SearchTools
 
 load_dotenv()
 
@@ -153,7 +153,7 @@ Your goal is to generate a comprehensive, evidence-based health optimization rep
         if format == "json":
             prompt = """Based on my health profile, generate a comprehensive health optimization report.
 
-CRITICAL REQUIREMENT: Your response MUST be a JSON object with EXACTLY these 5 top-level keys (no others):
+CRITICAL REQUIREMENT: Your response MUST be a JSON object with EXACTLY these 4 top-level keys (no others):
 
 {
   "health_assessment": {
@@ -175,19 +175,9 @@ CRITICAL REQUIREMENT: Your response MUST be a JSON object with EXACTLY these 5 t
       "priority": <integer 1-10>,
       "category": "diet" | "exercise" | "sleep" | "stress" | "supplementation" | "medical",
       "title": "<recommendation title>",
-      "action": "<specific action>",
+      "action": "<specific action with dosage for supplements>",
       "rationale": "<why this helps>",
       "expected_timeline": "<when to see results>",
-      "sources": [{"title": "<source title>", "url": "<URL>"}]
-    }
-  ],
-  "supplement_protocol": [
-    {
-      "supplement": "<supplement name>",
-      "dosage": "<amount>",
-      "frequency": "<how often>",
-      "rationale": "<why needed>",
-      "target_biomarkers": ["<biomarker>"],
       "sources": [{"title": "<source title>", "url": "<URL>"}]
     }
   ],
@@ -221,20 +211,24 @@ CRITICAL REQUIREMENT: Your response MUST be a JSON object with EXACTLY these 5 t
   }
 }
 
-DO NOT add extra keys like "executive_summary", "priority_interventions", or any other fields not listed above.
-DO NOT nest the required keys inside other objects.
-Use web search to find evidence. Every recommendation must have source URLs."""
+IMPORTANT NOTES:
+- Include supplements as recommendations with category "supplementation"
+- For supplement recommendations, include specific dosage in the "action" field (e.g., "Take 5000 IU daily with food")
+- EACH recommendation must have its own "sources" array with URLs from web search
+- DO NOT add extra keys like "executive_summary", "priority_interventions", "supplement_protocol", or any other fields
+- DO NOT nest the required keys inside other objects
+- Use web search to find evidence for every recommendation"""
         else:
             prompt = "Based on my health profile, generate a comprehensive health optimization report with specific, actionable recommendations. Use web search to find the latest research and cite all sources with URLs."
         
         return self._generate_with_tools(prompt)
     
-    def _generate_with_tools(self, prompt: str) -> str:
+    def _generate_with_tools(self, prompt: str, max_iterations: int = 6) -> str:
         """Generate response with iterative tool calling."""
         try:
             self.messages.append({"role": "user", "content": prompt})
             
-            max_iterations = 10
+            max_iterations = max_iterations
             iteration = 0
             
             while iteration < max_iterations:

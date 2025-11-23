@@ -1,7 +1,7 @@
 [project]
 name = "aurelia"
-version = "0.1.0"
-description = "Add your description here"
+version = "1.0.0"
+description = "AURELIA Health Coach - AI-powered health optimization with evidence-based recommendations"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
@@ -20,6 +20,12 @@ dependencies = [
     "transformers>=4.57.1",
     "uvicorn>=0.38.0",
 ]
+
+[tool.setuptools]
+packages = ["src.aurelia"]
+
+[tool.setuptools.package-dir]
+"" = "src"
 
 [dependency-groups]
 dev = [

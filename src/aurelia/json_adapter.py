@@ -2,9 +2,9 @@
 JSON adapter to transform model's creative output into required schema.
 """
 from typing import Dict, Any, List
-from schemas import (
+from .schemas import (
     HealthReport, HealthAssessment, BiomarkerFinding,
-    Recommendation, Supplement, LifestyleInterventions, LifestyleIntervention,
+    Recommendation, LifestyleInterventions, LifestyleIntervention,
     MonitoringPlan, BiomarkerExpectation, Source
 )
 
@@ -20,8 +20,7 @@ def adapt_model_json_to_schema(model_json: Dict[str, Any]) -> Dict[str, Any]:
     
     This function maps these to our required structure:
     - health_assessment
-    - recommendations
-    - supplement_protocol
+    - recommendations (includes supplements)
     - lifestyle_interventions
     - monitoring_plan
     """
@@ -31,16 +30,13 @@ def adapt_model_json_to_schema(model_json: Dict[str, Any]) -> Dict[str, Any]:
     # 1. Build health_assessment
     result["health_assessment"] = _extract_health_assessment(model_json)
     
-    # 2. Build recommendations
+    # 2. Build recommendations (includes supplements)
     result["recommendations"] = _extract_recommendations(model_json)
     
-    # 3. Build supplement_protocol
-    result["supplement_protocol"] = _extract_supplements(model_json)
-    
-    # 4. Build lifestyle_interventions
+    # 3. Build lifestyle_interventions
     result["lifestyle_interventions"] = _extract_lifestyle(model_json)
     
-    # 5. Build monitoring_plan
+    # 4. Build monitoring_plan
     result["monitoring_plan"] = _extract_monitoring(model_json)
     
     return result
@@ -102,22 +98,39 @@ def _extract_key_findings(data: Dict) -> List[Dict]:
 
 
 def _extract_recommendations(data: Dict) -> List[Dict]:
-    """Extract recommendations from various possible locations."""
+    """Extract recommendations from various possible locations, including supplements."""
     recs = []
     
-    # Check priority_interventions
-    if "priority_interventions" in data:
-        for i, item in enumerate(data["priority_interventions"], 1):
+    # Check priority_interventions or recommendations
+    priority_list = data.get("priority_interventions", data.get("recommendations", []))
+    if priority_list:
+        for i, item in enumerate(priority_list, 1):
             rec = {
                 "priority": item.get("priority", i),
                 "category": _map_category(item.get("category", "supplementation")),
-                "title": item.get("intervention", "Intervention"),
-                "action": item.get("protocol", ""),
+                "title": item.get("intervention", item.get("title", "Intervention")),
+                "action": item.get("protocol", item.get("action", "")),
                 "rationale": item.get("reasoning", item.get("rationale", item.get("evidence", ""))),
                 "expected_timeline": item.get("expected_timeline", "8-12 weeks"),
                 "sources": _extract_sources(item)
             }
             recs.append(rec)
+    
+    # Also extract from supplement_protocol if present (merge into recommendations)
+    if "supplement_protocol" in data:
+        supplements = data["supplement_protocol"]
+        if isinstance(supplements, list):
+            for i, supp in enumerate(supplements):
+                rec = {
+                    "priority": len(recs) + i + 1,
+                    "category": "supplementation",
+                    "title": supp.get("supplement", supp.get("name", "Supplement")),
+                    "action": f"{supp.get('dosage', '')} {supp.get('frequency', 'daily')}".strip(),
+                    "rationale": supp.get("rationale", supp.get("reasoning", "")),
+                    "expected_timeline": supp.get("expected_timeline", "8-12 weeks"),
+                    "sources": _extract_sources(supp)
+                }
+                recs.append(rec)
     
     # Ensure at least one recommendation
     if not recs:
@@ -177,81 +190,6 @@ def _extract_sources(item: Dict) -> List[Dict]:
                 sources.append({"title": "Research Source", "url": src})
     
     return sources
-
-
-def _extract_supplements(data: Dict) -> List[Dict]:
-    """Extract supplement protocol from various locations."""
-    supplements = []
-    
-    # Check supplement_protocol (might be nested)
-    if "supplement_protocol" in data:
-        protocol = data["supplement_protocol"]
-        
-        # If it's already a list
-        if isinstance(protocol, list):
-            for item in protocol:
-                supp = {
-                    "supplement": item.get("supplement", ""),
-                    "dosage": item.get("dosage", ""),
-                    "frequency": item.get("frequency", item.get("timing", "daily")),
-                    "rationale": item.get("rationale", item.get("reasoning", "")),
-                    "target_biomarkers": item.get("target_biomarkers", []),
-                    "sources": _extract_sources(item)
-                }
-                supplements.append(supp)
-        
-        # If it's nested in core_supplements or similar
-        elif isinstance(protocol, dict):
-            for key in ["core_supplements", "supplements", "essential_supplements"]:
-                if key in protocol and isinstance(protocol[key], list):
-                    for item in protocol[key]:
-                        supp = {
-                            "supplement": item.get("supplement", item.get("name", "")),
-                            "dosage": item.get("dosage", item.get("dose", "")),
-                            "frequency": item.get("frequency", item.get("timing", "daily")),
-                            "rationale": item.get("rationale", item.get("reasoning", "")),
-                            "target_biomarkers": item.get("target_biomarkers", []),
-                            "sources": _extract_sources(item)
-                        }
-                        supplements.append(supp)
-    
-    # Check priority_interventions with supplementation category
-    if not supplements and "priority_interventions" in data:
-        for item in data["priority_interventions"]:
-            if "supplement" in item.get("category", "").lower():
-                supp = {
-                    "supplement": item.get("intervention", ""),
-                    "dosage": _extract_dosage_from_protocol(item.get("protocol", "")),
-                    "frequency": "daily",
-                    "rationale": item.get("reasoning", ""),
-                    "target_biomarkers": item.get("target_biomarkers", []),
-                    "sources": _extract_sources(item)
-                }
-                supplements.append(supp)
-    
-    # Ensure at least one supplement
-    if not supplements:
-        supplements.append({
-            "supplement": "Vitamin D3",
-            "dosage": "5000 IU",
-            "frequency": "daily",
-            "rationale": "Based on research",
-            "target_biomarkers": ["vitamin_D"],
-            "sources": []
-        })
-    
-    return supplements
-
-
-def _extract_dosage_from_protocol(protocol: str) -> str:
-    """Try to extract dosage from protocol text."""
-    # Simple extraction - look for patterns like "5000 IU", "500mg", etc.
-    import re
-    pattern = r'\d+[\s,]*(IU|mg|g|mcg|mL)'
-    match = re.search(pattern, protocol, re.IGNORECASE)
-    if match:
-        return match.group(0)
-    return "As directed"
 
 
 def _extract_lifestyle(data: Dict) -> Dict:

@@ -1,27 +1,27 @@
-"""AURELIA - AI Health Recommendation Coach
+"""AURELIA Health Coach - AI-powered health optimization system."""
 
-A clean, maintainable health coaching system with web search integration.
-"""
+__version__ = "1.0.0"
 
 from .health_coach import HealthCoach
 from .schemas import (
     HealthProfile,
     HealthReport,
     HealthReportWithMetadata,
+    MetabolicScoreResult,
+    InflammationScoreResult,
+    OxygenScoreResult,
     Recommendation,
-    Supplement,
     Source
 )
-from .tools import SearchTools
 
-__version__ = "1.0.0"
 __all__ = [
     "HealthCoach",
     "HealthProfile",
     "HealthReport",
     "HealthReportWithMetadata",
+    "MetabolicScoreResult",
+    "InflammationScoreResult",
+    "OxygenScoreResult",
     "Recommendation",
-    "Supplement",
     "Source",
-    "SearchTools"
 ]

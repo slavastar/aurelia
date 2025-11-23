@@ -18,12 +18,18 @@ except ImportError:
     IMAGE_PROCESSING_AVAILABLE = False
     print("Warning: Image processing libraries not available. Face photo analysis disabled.")
 
-from health_coach import HealthCoach
-from schemas import (
+from .health_coach import HealthCoach
+from .schemas import (
     HealthProfile,
     HealthReport,
-    HealthReportWithMetadata
+    HealthReportWithMetadata,
+    MetabolicScoreResult,
+    InflammationScoreResult,
+    OxygenScoreResult
 )
+from .scoring.metabolic_scores import MetabolicScore
+from .scoring.inflammation_scores import InflammationScore
+from .scoring.oxygen_scores import OxygenScore
 
 app = FastAPI(
     title="AURELIA Health Coach API",
@@ -111,6 +117,28 @@ async def generate_report(profile: HealthProfile):
         and monitoring plan
     """
     try:
+        # Compute metabolic score if biomarkers available
+        metabolic_result = MetabolicScore.compute_metabolic_score(profile.biomarkers)
+        if metabolic_result:
+            profile.metabolic_score = MetabolicScoreResult(**metabolic_result)
+            print(f"Metabolic efficiency score: {metabolic_result['score']} ({metabolic_result['level']})")
+        
+        # Compute inflammation score if biomarkers available
+        if profile.is_menstruating is not None:
+            inflammation_result = InflammationScore.compute_inflammation_score(
+                profile.biomarkers,
+                is_menstruating=profile.is_menstruating
+            )
+            if inflammation_result:
+                profile.inflammation_score = InflammationScoreResult(**inflammation_result)
+                print(f"Inflammation/recovery score: {inflammation_result['score']} ({inflammation_result['level']})")
+        
+        # Compute oxygen transport score if biomarkers available
+        oxygen_result = OxygenScore.compute_oxygen_score(profile.biomarkers)
+        if oxygen_result:
+            profile.oxygen_score = OxygenScoreResult(**oxygen_result)
+            print(f"Oxygen transport score: {oxygen_result['score']} ({oxygen_result['level']})")
+        
         # Initialize health coach
         coach = HealthCoach()
         
@@ -185,6 +213,28 @@ async def generate_report_with_photo(
         profile_data = json.loads(profile_json)
         profile = HealthProfile(**profile_data)
         
+        # Compute metabolic score if biomarkers available
+        metabolic_result = MetabolicScore.compute_metabolic_score(profile.biomarkers)
+        if metabolic_result:
+            profile.metabolic_score = MetabolicScoreResult(**metabolic_result)
+            print(f"Metabolic efficiency score: {metabolic_result['score']} ({metabolic_result['level']})")
+        
+        # Compute inflammation score if biomarkers available
+        if profile.is_menstruating is not None:
+            inflammation_result = InflammationScore.compute_inflammation_score(
+                profile.biomarkers,
+                is_menstruating=profile.is_menstruating
+            )
+            if inflammation_result:
+                profile.inflammation_score = InflammationScoreResult(**inflammation_result)
+                print(f"Inflammation/recovery score: {inflammation_result['score']} ({inflammation_result['level']})")
+        
+        # Compute oxygen transport score if biomarkers available
+        oxygen_result = OxygenScore.compute_oxygen_score(profile.biomarkers)
+        if oxygen_result:
+            profile.oxygen_score = OxygenScoreResult(**oxygen_result)
+            print(f"Oxygen transport score: {oxygen_result['score']} ({oxygen_result['level']})")
+        
         # Process face photo
         if not face_photo.content_type.startswith('image/'):
             raise HTTPException(status_code=400, detail="Must be an image file")
@@ -218,7 +268,19 @@ async def generate_report_with_photo(
         
         report_data = json.loads(content)
         from json_adapter import adapt_model_json_to_schema
-        adapted_data = adapt_model_json_to_schema(report_data)
+        
+        # Debug: save raw report
+        with open("debug_raw_report.json", "w") as f:
+            json.dump(report_data, f, indent=2)
+        
+        try:
+            adapted_data = adapt_model_json_to_schema(report_data)
+        except Exception as adapt_error:
+            print(f"Adapter error: {adapt_error}")
+            print(f"Report data type: {type(report_data)}")
+            print(f"Report data keys: {report_data.keys() if isinstance(report_data, dict) else 'Not a dict'}")
+            raise HTTPException(status_code=500, detail=f"Adapter error: {adapt_error}")
+        
         health_report = HealthReport(**adapted_data)
         
         response = HealthReportWithMetadata(
