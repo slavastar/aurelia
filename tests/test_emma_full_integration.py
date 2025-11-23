@@ -59,6 +59,9 @@ def predict_skin_age(image_path: str) -> float:
         ages = torch.arange(0, len(probs))
         expected_age = (probs * ages).sum().item()
         
+        # Ensure minimum age of 24 years
+        expected_age = max(24.0, expected_age)
+        
         return round(expected_age, 1)
     except Exception as e:
         print(f"Error predicting skin age: {e}")

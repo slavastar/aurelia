@@ -92,6 +92,8 @@ def predict_skin_age(image) -> float:
     
     # Calculate weighted average
     weighted_age = sum(r['mid'] * r['prob'] for r in age_ranges)
+    # Ensure minimum age of 24 years
+    weighted_age = max(24.0, weighted_age)
     return round(weighted_age, 1)
 
 
