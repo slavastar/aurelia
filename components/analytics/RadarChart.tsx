@@ -35,25 +35,25 @@ export default function RadarChart({ data, title }: RadarChartProps) {
       {title && (
         <h3 className="text-lg font-bold text-white mb-4">{title}</h3>
       )}
-      
+
       <div className="h-[400px]">
         <ResponsiveContainer width="100%" height="100%">
           <RechartsRadar data={data}>
             <PolarGrid stroke="rgba(255,255,255,0.1)" />
-            <PolarAngleAxis 
-              dataKey="category" 
+            <PolarAngleAxis
+              dataKey="category"
               tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 12 }}
             />
-            <PolarRadiusAxis 
-              angle={90} 
+            <PolarRadiusAxis
+              angle={90}
               domain={[0, 100]}
               tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 10 }}
             />
-            <Radar 
-              name="Health Score" 
-              dataKey="value" 
-              stroke="#a3e635" 
-              fill="#a3e635" 
+            <Radar
+              name="Health Score"
+              dataKey="value"
+              stroke="#a3e635"
+              fill="#a3e635"
               fillOpacity={0.6}
             />
             <Tooltip content={<CustomTooltip />} />
@@ -63,8 +63,8 @@ export default function RadarChart({ data, title }: RadarChartProps) {
 
       <div className="mt-4 p-4 bg-white/5 rounded-lg border border-white/10">
         <p className="text-sm text-white/80">
-          <strong>How to read:</strong> Each axis represents a different health dimension. 
-          The closer to the edge, the better your score in that area. Aim for a balanced, 
+          <strong>How to read:</strong> Each axis represents a different health dimension.
+          The closer to the edge, the better your score in that area. Aim for a balanced,
           well-rounded shape.
         </p>
       </div>

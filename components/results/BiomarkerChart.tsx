@@ -104,8 +104,8 @@ export default function BiomarkerChart({ biomarkers }: BiomarkerChartProps) {
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-          <XAxis 
-            dataKey="name" 
+          <XAxis
+            dataKey="name"
             angle={-45}
             textAnchor="end"
             height={80}
@@ -113,7 +113,7 @@ export default function BiomarkerChart({ biomarkers }: BiomarkerChartProps) {
           />
           <YAxis tick={{ fill: '#6b7280', fontSize: 12 }} />
           <Tooltip content={<CustomTooltip />} />
-          <Legend 
+          <Legend
             wrapperStyle={{ paddingTop: '20px' }}
             formatter={(value) => value === 'value' ? 'Your Value' : 'Optimal Range'}
           />

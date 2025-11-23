@@ -25,7 +25,7 @@ export default function PDFExport({ analysisData }: PDFExportProps) {
 
   const exportToPDF = async () => {
     setIsExporting(true);
-    
+
     try {
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pageWidth = pdf.internal.pageSize.getWidth();
@@ -38,7 +38,7 @@ export default function PDFExport({ analysisData }: PDFExportProps) {
         pdf.setFontSize(fontSize);
         pdf.setFont('helvetica', isBold ? 'bold' : 'normal');
         const lines = pdf.splitTextToSize(text, pageWidth - 2 * margin);
-        
+
         lines.forEach((line: string) => {
           if (yPosition > pageHeight - margin) {
             pdf.addPage();
@@ -60,15 +60,15 @@ export default function PDFExport({ analysisData }: PDFExportProps) {
       pdf.setFontSize(12);
       pdf.setFont('helvetica', 'normal');
       pdf.text('Women\'s Health Intelligence Report', margin, 33);
-      
+
       yPosition = 50;
       pdf.setTextColor(0, 0, 0);
 
       // Date
-      const date = new Date().toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
+      const date = new Date().toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
       });
       addText(`Report Generated: ${date}`, 10);
       yPosition += 5;
@@ -80,14 +80,14 @@ export default function PDFExport({ analysisData }: PDFExportProps) {
       pdf.setFont('helvetica', 'bold');
       pdf.text('Health Score', margin + 5, yPosition + 10);
       pdf.setFontSize(32);
-      
+
       // Color based on score
       const score = analysisData.mlRiskScore;
       if (score >= 80) pdf.setTextColor(16, 185, 129);
       else if (score >= 60) pdf.setTextColor(59, 130, 246);
       else if (score >= 40) pdf.setTextColor(245, 158, 11);
       else pdf.setTextColor(239, 68, 68);
-      
+
       pdf.text(`${score}/100`, pageWidth - margin - 40, yPosition + 22);
       pdf.setTextColor(0, 0, 0);
       yPosition += 40;
@@ -113,11 +113,11 @@ export default function PDFExport({ analysisData }: PDFExportProps) {
       addText('Health Profile', 16, true);
       addText(`Age: ${analysisData.context.age}`, 11);
       addText(`Cycle Status: ${analysisData.context.cycle_status.replace(/_/g, ' ')}`, 11);
-      
+
       if (analysisData.context.symptoms.length > 0) {
         addText(`Symptoms: ${analysisData.context.symptoms.join(', ')}`, 11);
       }
-      
+
       if (analysisData.context.goals.length > 0) {
         addText(`Goals: ${analysisData.context.goals.join(', ')}`, 11);
       }
@@ -136,7 +136,7 @@ export default function PDFExport({ analysisData }: PDFExportProps) {
           const lines = section.trim().split('\n');
           const title = lines[0].trim();
           const content = lines.slice(1).join('\n').trim();
-          
+
           if (title) {
             addText(title, 14, true);
           }
@@ -173,10 +173,10 @@ export default function PDFExport({ analysisData }: PDFExportProps) {
   };
 
   const exportAsText = () => {
-    const date = new Date().toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    const date = new Date().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     });
 
     let content = `AURELIA - Women's Health Intelligence Report\n`;

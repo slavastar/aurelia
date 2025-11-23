@@ -22,7 +22,7 @@ export default function RecommendationsPage() {
 
   const loadRecommendations = () => {
     const latestEntry = getLatestEntry();
-    
+
     if (latestEntry) {
       const personalizedRecs = generateRecommendations(
         latestEntry.biomarkers,
@@ -33,7 +33,7 @@ export default function RecommendationsPage() {
 
     const lifestyle = getLifestyleRecommendations();
     setLifestyleRecs(lifestyle);
-    
+
     setLoading(false);
   };
 
@@ -66,7 +66,7 @@ export default function RecommendationsPage() {
             <ArrowLeft className="w-5 h-5" />
             Back
           </button>
-          
+
           <div className="flex items-center gap-3 mb-4">
             <Target className="w-10 h-10 text-aurelia-lime" />
             <h1 className="text-4xl font-bold gradient-aurelia-text-lime">Your Action Plan</h1>
@@ -203,8 +203,8 @@ export default function RecommendationsPage() {
           className="mt-8 p-4 bg-amber-50 border-2 border-amber-200 rounded-lg"
         >
           <p className="text-sm text-amber-900">
-            <strong>Important:</strong> These recommendations are for educational purposes only and should not replace 
-            professional medical advice. Always consult with your healthcare provider before making significant changes 
+            <strong>Important:</strong> These recommendations are for educational purposes only and should not replace
+            professional medical advice. Always consult with your healthcare provider before making significant changes
             to your diet, exercise routine, or supplement regimen.
           </p>
         </motion.div>

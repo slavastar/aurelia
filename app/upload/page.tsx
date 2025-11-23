@@ -61,7 +61,7 @@ export default function UploadPage() {
 
   const convertPdfToImage = async (file: File): Promise<Blob> => {
     setStatusMessage('Converting PDF to image for analysis...');
-    
+
     // Dynamically import PDF.js
     const pdfjsLib = await import('pdfjs-dist');
     pdfjsLib.GlobalWorkerOptions.workerSrc = WORKER_SRC;
@@ -69,7 +69,7 @@ export default function UploadPage() {
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
     const numPages = pdf.numPages;
-    
+
     // Calculate dimensions
     let totalHeight = 0;
     let maxWidth = 0;
@@ -101,7 +101,7 @@ export default function UploadPage() {
       pageCanvas.width = viewport.width;
       pageCanvas.height = viewport.height;
       const pageContext = pageCanvas.getContext('2d');
-      
+
       if (pageContext) {
         await page.render({ canvasContext: pageContext, viewport }).promise;
         context.drawImage(pageCanvas, 0, currentHeight);
@@ -213,15 +213,15 @@ export default function UploadPage() {
             className={`
               border-2 border-dashed rounded-xl p-12 text-center cursor-pointer
               transition-all duration-300 ease-in-out
-              ${isDragActive 
-                ? 'border-aurelia-lime bg-aurelia-lime/10 scale-[1.02]' 
+              ${isDragActive
+                ? 'border-aurelia-lime bg-aurelia-lime/10 scale-[1.02]'
                 : 'border-white/20 hover:border-aurelia-lime/50 hover:bg-white/5'
               }
               ${uploading ? 'opacity-50 cursor-not-allowed' : ''}
             `}
           >
             <input {...getInputProps()} disabled={uploading} />
-            
+
             <div className="flex flex-col items-center gap-4">
               {/* Upload Icon */}
               <div className={`p-4 rounded-full transition-colors ${isDragActive ? 'bg-aurelia-lime/20' : 'bg-white/5'}`}>
@@ -260,7 +260,7 @@ export default function UploadPage() {
         {/* Error Message */}
         <AnimatePresence>
           {error && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
@@ -280,7 +280,7 @@ export default function UploadPage() {
         {/* Success Result */}
         <AnimatePresence>
           {uploadResult && uploadResult.success && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               className="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl shadow-xl p-8"
@@ -316,8 +316,8 @@ export default function UploadPage() {
             {/* Validation Status */}
             <div className={`
               rounded-lg p-4 mb-6
-              ${uploadResult.validation.canProceed 
-                ? 'bg-green-500/10 border border-green-500/30' 
+              ${uploadResult.validation.canProceed
+                ? 'bg-green-500/10 border border-green-500/30'
                 : 'bg-yellow-500/10 border border-yellow-500/30'
               }
             `}>
@@ -326,7 +326,7 @@ export default function UploadPage() {
               }`}>
                 {uploadResult.validation.message}
               </p>
-              
+
               {uploadResult.validation.criticalMissing.length > 0 && (
                 <div className="mt-3">
                   <p className="text-sm font-medium text-white/80 mb-1">

@@ -13,30 +13,30 @@ export type QuestionnaireData = {
   ageRange: string;
   height: string;
   weight: string;
-  
+
   deskJob: string;
   dailySteps: string;
   workoutFreq: string;
   workoutType: string[];
-  
+
   sleepHours: string;
   sleepQuality: string;
   sleepRegularity: string;
-  
+
   dietBalanced: string;
   dietType: string;
   dietOther: string;
   nutritionalDeficiencies: string;
   substanceUsage: string;
   substanceFrequency: string;
-  
+
   stressLevel: number;
   stressReduction: string;
-  
+
   menopause: string;
   hormonalContraception: string;
   pregnancyStatus: string;
-  
+
   goals: string[];
   resultPreference: string;
   otherInfo: string;
@@ -49,30 +49,30 @@ const initialData: QuestionnaireData = {
   ageRange: '',
   height: '',
   weight: '',
-  
+
   deskJob: '',
   dailySteps: '',
   workoutFreq: '',
   workoutType: [],
-  
+
   sleepHours: '',
   sleepQuality: '',
   sleepRegularity: '',
-  
+
   dietBalanced: '',
   dietType: '',
   dietOther: '',
   nutritionalDeficiencies: '',
   substanceUsage: '',
   substanceFrequency: '',
-  
+
   stressLevel: 0,
   stressReduction: '',
-  
+
   menopause: '',
   hormonalContraception: '',
   pregnancyStatus: '',
-  
+
   goals: [],
   resultPreference: '',
   otherInfo: '',
@@ -138,7 +138,7 @@ export default function QuestionnaireForm() {
         setError("File size too large. Please upload a photo under 5MB.");
         return;
       }
-      
+
       const reader = new FileReader();
       reader.onloadend = () => {
         updateField('facePhoto', reader.result as string);
@@ -225,7 +225,7 @@ export default function QuestionnaireForm() {
           <p className="text-lg text-white/80">
             This application is specifically designed for female physiology and health. The algorithms and recommendations would not be suitable for you.
           </p>
-          <button 
+          <button
             onClick={() => updateField('isWoman', null)}
             className="mt-8 px-6 py-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
           >
@@ -240,7 +240,7 @@ export default function QuestionnaireForm() {
     <div className="min-h-screen bg-[#241647] flex flex-col text-white">
       {/* Progress Bar */}
       <div className="fixed top-0 left-0 w-full h-2 bg-white/10 z-50">
-        <motion.div 
+        <motion.div
           className="h-full bg-aurelia-lime"
           initial={{ width: 0 }}
           animate={{ width: `${(step / 7) * 100}%` }}
@@ -682,7 +682,7 @@ export default function QuestionnaireForm() {
                   </div>
 
                   {formData.substanceUsage && formData.substanceUsage !== 'Never' && (
-                    <motion.div 
+                    <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       className="space-y-4"
@@ -806,7 +806,7 @@ export default function QuestionnaireForm() {
                   </div>
 
                   {formData.menopause === 'No' && (
-                    <motion.div 
+                    <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       className="space-y-4"
@@ -878,12 +878,12 @@ export default function QuestionnaireForm() {
                   <div className="flex flex-col items-center justify-center border-2 border-dashed border-white/20 rounded-2xl p-12 hover:border-aurelia-lime/50 transition-colors bg-white/5">
                     {formData.facePhoto ? (
                       <div className="relative w-full max-w-sm aspect-square rounded-xl overflow-hidden mb-4">
-                        <img 
-                          src={formData.facePhoto} 
-                          alt="Selfie preview" 
+                        <img
+                          src={formData.facePhoto}
+                          alt="Selfie preview"
                           className="w-full h-full object-cover"
                         />
-                        <button 
+                        <button
                           onClick={() => updateField('facePhoto', '')}
                           className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition"
                         >
@@ -901,17 +901,17 @@ export default function QuestionnaireForm() {
                         </p>
                         <label className="cursor-pointer bg-aurelia-lime text-aurelia-purple px-8 py-3 rounded-full font-semibold hover:bg-aurelia-accent transition shadow-lg">
                           Choose Photo
-                          <input 
-                            type="file" 
-                            accept="image/*" 
-                            className="hidden" 
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
                             onChange={handlePhotoUpload}
                           />
                         </label>
                       </>
                     )}
                   </div>
-                  
+
                   <div className="bg-white/5 p-6 rounded-xl border border-white/10">
                     <h4 className="font-semibold text-white mb-2 flex items-center gap-2">
                       <AlertCircle className="w-5 h-5 text-aurelia-lime" />

@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     // Upload to Vercel Blob Storage (or use mock mode if no token)
     let blob;
     const hasToken = process.env.BLOB_READ_WRITE_TOKEN;
-    
+
     if (hasToken) {
       blob = await put(file.name, buffer, {
         access: 'public',

@@ -20,15 +20,15 @@ export default function AnalyticsPage() {
     if (stored) {
       try {
         const data = JSON.parse(stored);
-        
+
         // Convert biomarkers to the format expected by BodySystemView
         const formattedBiomarkers: Record<string, Biomarker> = {};
-        
+
         Object.entries(data.biomarkers || {}).forEach(([key, value]) => {
           if (typeof value === 'number') {
             // Determine status based on value (simplified logic)
             let status: Biomarker['status'] = 'normal';
-            
+
             // Example status determination (you can enhance this)
             if (key === 'HbA1c') {
               if (value < 5.7) status = 'optimal';
@@ -44,7 +44,7 @@ export default function AnalyticsPage() {
               else if (value < 10) status = 'borderline';
               else status = 'attention';
             }
-            
+
             formattedBiomarkers[key] = {
               value,
               unit: getUnit(key),
@@ -53,7 +53,7 @@ export default function AnalyticsPage() {
             };
           }
         });
-        
+
         setBiomarkers(formattedBiomarkers);
       } catch (error) {
         console.error('Error loading analysis:', error);
@@ -223,7 +223,7 @@ export default function AnalyticsPage() {
 
         {/* Radar Chart */}
         <div className="mb-8">
-          <RadarChart 
+          <RadarChart
             data={radarData}
             title="Multi-Dimensional Health Profile"
           />
@@ -238,9 +238,9 @@ export default function AnalyticsPage() {
             Understanding Your Analytics
           </h3>
           <p className="text-white/80 text-sm leading-relaxed">
-            These advanced visualizations help you understand how different aspects of your health 
-            interconnect. The radar chart shows your overall health balance across key dimensions, 
-            while the body systems view organizes your biomarkers by physiological function. 
+            These advanced visualizations help you understand how different aspects of your health
+            interconnect. The radar chart shows your overall health balance across key dimensions,
+            while the body systems view organizes your biomarkers by physiological function.
             Use these insights to identify areas for improvement and track your progress over time.
           </p>
         </div>

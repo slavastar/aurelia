@@ -107,20 +107,20 @@ export default function TrendChart({
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis 
-                dataKey="formattedDate" 
+              <XAxis
+                dataKey="formattedDate"
                 tick={{ fill: '#6b7280', fontSize: 12 }}
                 stroke="#d1d5db"
               />
-              <YAxis 
+              <YAxis
                 tick={{ fill: '#6b7280', fontSize: 12 }}
                 stroke="#d1d5db"
               />
               <Tooltip content={<CustomTooltip />} />
-              <Area 
-                type="monotone" 
-                dataKey={dataKey} 
-                stroke={color} 
+              <Area
+                type="monotone"
+                dataKey={dataKey}
+                stroke={color}
                 strokeWidth={2}
                 fill={`url(#gradient-${dataKey})`}
               />
@@ -128,20 +128,20 @@ export default function TrendChart({
           ) : (
             <LineChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis 
-                dataKey="formattedDate" 
+              <XAxis
+                dataKey="formattedDate"
                 tick={{ fill: '#6b7280', fontSize: 12 }}
                 stroke="#d1d5db"
               />
-              <YAxis 
+              <YAxis
                 tick={{ fill: '#6b7280', fontSize: 12 }}
                 stroke="#d1d5db"
               />
               <Tooltip content={<CustomTooltip />} />
-              <Line 
-                type="monotone" 
-                dataKey={dataKey} 
-                stroke={color} 
+              <Line
+                type="monotone"
+                dataKey={dataKey}
+                stroke={color}
                 strokeWidth={3}
                 dot={{ fill: color, r: 4 }}
                 activeDot={{ r: 6 }}

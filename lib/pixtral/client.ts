@@ -104,7 +104,7 @@ export async function extractTextFromDocument(
   mimeType: string = 'application/pdf'
 ): Promise<PixtralOCRResponse> {
   const apiKey = process.env.PIXTRAL_API_KEY;
-  
+
   if (!apiKey) {
     throw new Error('PIXTRAL_API_KEY is not configured');
   }
@@ -152,7 +152,7 @@ export async function extractTextFromDocument(
 
     // Transform Pixtral response to our format
     const extractedText = data.choices?.[0]?.message?.content || '';
-    
+
     return {
       text: extractedText,
       confidence: 0.85,
@@ -257,7 +257,7 @@ export function getPixtralStatus(): {
   apiKey: string;
 } {
   const configured = isPixtralConfigured();
-  
+
   return {
     configured,
     apiKey: configured ? '***' + process.env.PIXTRAL_API_KEY?.slice(-4) : 'not set',

@@ -38,7 +38,7 @@ export default function ProgressRing({
               <stop offset="100%" stopColor={color} stopOpacity="0.6" />
             </linearGradient>
           </defs>
-          
+
           {/* Background circle */}
           <circle
             cx={size / 2}
@@ -49,7 +49,7 @@ export default function ProgressRing({
             strokeWidth={strokeWidth}
             className="text-white/10"
           />
-          
+
           {/* Progress circle */}
           <circle
             cx={size / 2}
@@ -64,7 +64,7 @@ export default function ProgressRing({
             className="transition-all duration-1000 ease-out"
           />
         </svg>
-        
+
         {/* Center content */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           {showPercentage && (
@@ -74,7 +74,7 @@ export default function ProgressRing({
           )}
         </div>
       </div>
-      
+
       {label && (
         <p className="mt-2 text-sm font-medium text-white/60 text-center">
           {label}

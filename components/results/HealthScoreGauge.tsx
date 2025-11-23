@@ -18,7 +18,7 @@ export default function HealthScoreGauge({ score, size = 'md' }: HealthScoreGaug
 
   // Normalize score to 0-100
   const normalizedScore = Math.max(0, Math.min(100, score));
-  
+
   // Calculate percentage for the gauge
   const percentage = normalizedScore;
   const remaining = 100 - percentage;
@@ -67,7 +67,7 @@ export default function HealthScoreGauge({ score, size = 'md' }: HealthScoreGaug
             </Pie>
           </PieChart>
         </ResponsiveContainer>
-        
+
         {/* Score display in center */}
         <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ top: '40%' }}>
           <div className={`font-bold ${config.fontSize}`} style={{ color }}>

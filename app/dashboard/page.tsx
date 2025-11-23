@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  Activity, 
-  TrendingUp, 
-  Calendar, 
-  Heart, 
+import {
+  Activity,
+  TrendingUp,
+  Calendar,
+  Heart,
   Target,
   Clock,
   Award,
@@ -108,7 +108,7 @@ export default function DashboardPage() {
       <div className="py-12 px-4">
         <div className="max-w-7xl mx-auto">
           {/* Page Title */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             className="mb-8"
@@ -122,7 +122,7 @@ export default function DashboardPage() {
           </motion.div>
 
         {/* Stats Cards */}
-        <motion.div 
+        <motion.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"

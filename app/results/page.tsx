@@ -32,7 +32,7 @@ export default function ResultsPage() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [biomarkers, setBiomarkers] = useState<Biomarkers>({});
   const [questionnaireData, setQuestionnaireData] = useState<any | null>(null);
-  
+
   // Achievement tracking
   const {
     checkForNewAchievements,
@@ -142,7 +142,7 @@ export default function ResultsPage() {
           }
         );
         toast.success('Analysis saved to your dashboard!');
-        
+
         // Check for newly unlocked achievements
         setTimeout(() => {
           checkForNewAchievements();
@@ -245,7 +245,7 @@ export default function ResultsPage() {
       <Header />
       <div className="py-12 px-4">
         <Toaster position="top-right" />
-      
+
         {/* Achievement Unlock Animation */}
         {showUnlockAnimation && currentUnlock && (
           <UnlockAnimation
@@ -253,7 +253,7 @@ export default function ResultsPage() {
             onClose={handleCloseAnimation}
           />
         )}
-      
+
         <div className="max-w-7xl mx-auto">
           {/* Header */}
                     <div className="text-center mb-12">
@@ -274,7 +274,7 @@ export default function ResultsPage() {
               <Activity className="w-8 h-8 text-aurelia-lime" />
               <h2 className="text-2xl font-bold text-white">Your Health Score</h2>
             </div>
-            
+
             <div className="flex flex-col lg:flex-row items-center gap-8">
               <div className="flex-shrink-0">
                 <HealthScoreGauge score={result.mlRiskScore} size="md" />
@@ -321,10 +321,10 @@ export default function ResultsPage() {
             <h2 className="text-2xl font-bold text-white">Your Biomarkers</h2>
           </div>
           <BiomarkerChart biomarkers={biomarkers as Record<string, number>} />
-          
+
           <div className="mt-6 p-4 bg-white/5 border border-white/10 rounded-lg">
             <p className="text-sm text-white/80">
-              <strong>How to read this chart:</strong> Your values are shown in color (green = optimal, amber = attention needed, red = warning). 
+              <strong>How to read this chart:</strong> Your values are shown in color (green = optimal, amber = attention needed, red = warning).
               The gray bars show optimal target ranges for comparison.
             </p>
           </div>
@@ -339,7 +339,7 @@ export default function ResultsPage() {
               Personalized Analysis
             </h2>
           </div>
-          
+
           <div className="prose prose-invert prose-lg max-w-none">
             <div className="whitespace-pre-line text-white/90 leading-relaxed">
               {result.aureliaAnalysis}
@@ -413,10 +413,10 @@ export default function ResultsPage() {
             <div>
               <h3 className="font-bold text-white mb-2">Important Medical Disclaimer</h3>
               <p className="text-sm text-white/60">
-                This analysis is for informational and educational purposes only. 
-                AURELIA does not diagnose, treat, or cure any condition. The insights provided are based on 
-                general health principles and should not replace professional medical advice. Always consult 
-                with qualified healthcare professionals for medical advice, diagnosis, or treatment decisions. 
+                This analysis is for informational and educational purposes only.
+                AURELIA does not diagnose, treat, or cure any condition. The insights provided are based on
+                general health principles and should not replace professional medical advice. Always consult
+                with qualified healthcare professionals for medical advice, diagnosis, or treatment decisions.
                 If you experience severe symptoms or have concerns about your health, seek immediate medical attention.
               </p>
             </div>

@@ -152,7 +152,7 @@ export default function ReviewPage() {
             {criticalBiomarkers.map(name => {
               const value = biomarkers[name];
               const isPresent = value !== undefined;
-              
+
               return (
                 <div key={name} className={`border-2 rounded-lg p-4 ${
                   isPresent ? 'border-green-500/30 bg-green-500/10' : 'border-white/10 bg-white/5'
@@ -208,7 +208,7 @@ export default function ReviewPage() {
                 </div>
               ))}
           </div>
-          
+
           {/* Add More Button */}
           <div className="mt-4">
             <button
@@ -253,8 +253,8 @@ export default function ReviewPage() {
         {!canProceed && (
           <div className="mt-6 bg-blue-500/20 border border-blue-500/30 rounded-xl p-4">
             <p className="text-sm text-blue-100">
-              <strong>Need help?</strong> If your blood test doesn't include these biomarkers, 
-              you can manually enter values from previous tests or request these specific tests 
+              <strong>Need help?</strong> If your blood test doesn't include these biomarkers,
+              you can manually enter values from previous tests or request these specific tests
               from your healthcare provider.
             </p>
           </div>

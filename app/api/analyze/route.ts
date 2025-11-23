@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     if (safetyResult.isEmergency) {
       console.log('⚠️ Emergency detected!');
       const emergencyMessage = generateEmergencyMessage(safetyResult);
-      
+
       return NextResponse.json<AnalysisOutput>({
         success: true,
         isEmergency: true,
@@ -51,9 +51,9 @@ export async function POST(request: NextRequest) {
 
     // Step 2: Call Python AI Health Coach
     console.log('🤖 Calling AI Health Coach...');
-    
-    const baseUrl = process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}` 
+
+    const baseUrl = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
       : 'http://localhost:8000'; // Default to local python server
 
     // Map context to HealthProfile
@@ -75,25 +75,27 @@ export async function POST(request: NextRequest) {
     let analysisResult;
     try {
       let pythonResponse;
-      
+
       if (context.face_photo) {
         // If photo exists, use the photo endpoint with multipart/form-data
         const formData = new FormData();
         formData.append('profile', JSON.stringify(healthProfile));
-        
+
         // Convert base64 to blob
         const base64Data = context.face_photo.split(',')[1];
         const binaryData = Buffer.from(base64Data, 'base64');
         const blob = new Blob([binaryData], { type: 'image/jpeg' });
+        
+        formData.append('profile_json', JSON.stringify(healthProfile));
         formData.append('face_photo', blob, 'face.jpg');
 
-        pythonResponse = await fetch(`${baseUrl}/api/generate-report-with-photo`, {
+        pythonResponse = await fetch(`${baseUrl}/api/py/generate-report-with-photo`, {
           method: 'POST',
           body: formData,
         });
       } else {
         // Standard JSON endpoint
-        pythonResponse = await fetch(`${baseUrl}/api/generate-report`, {
+        pythonResponse = await fetch(`${baseUrl}/api/py/generate-report`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(healthProfile)
@@ -197,7 +199,7 @@ ${analysisResult.supplement_protocol.map((supp: any) => `- **${supp.supplement}*
 
   } catch (error) {
     console.error('❌ Analysis error:', error);
-    
+
     return NextResponse.json(
       {
         success: false,

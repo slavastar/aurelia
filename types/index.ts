@@ -23,35 +23,35 @@ export interface Biomarkers {
   Creatinine?: number; // mg/dL
   Potassium?: number; // mEq/L
   Troponin?: number; // ng/mL
-  
+
   // Thyroid panel
   T3?: number; // Triiodothyronine (ng/dL)
   T4?: number; // Thyroxine (μg/dL)
   FreeT3?: number; // pg/mL
   FreeT4?: number; // ng/dL
-  
+
   // Lipid panel
   TotalCholesterol?: number; // mg/dL
   LDL?: number; // mg/dL
   HDL?: number; // mg/dL
   Triglycerides?: number; // mg/dL
   ApoB?: number; // mg/dL
-  
+
   // Liver function
   ALT?: number; // U/L
   AST?: number; // U/L
-  
+
   // Hormones
   Estrogen?: number; // pg/mL
   Progesterone?: number; // ng/mL
   Testosterone?: number; // ng/dL
   Cortisol?: number; // μg/dL
-  
+
   // Other
   Calcium?: number; // mg/dL
   Magnesium?: number; // mg/dL
   Zinc?: number; // μg/dL
-  
+
   // Allow for additional biomarkers
   [key: string]: number | undefined;
 }
@@ -80,20 +80,20 @@ export interface Biomarker {
 // User Context Types
 // ============================================================================
 
-export type CycleStatus = 
-  | 'follicular' 
-  | 'ovulation' 
-  | 'luteal' 
-  | 'menstruation' 
-  | 'perimenopause' 
-  | 'postmenopause' 
+export type CycleStatus =
+  | 'follicular'
+  | 'ovulation'
+  | 'luteal'
+  | 'menstruation'
+  | 'perimenopause'
+  | 'postmenopause'
   | 'not_applicable';
 
-export type ExerciseFrequency = 
-  | 'sedentary' 
-  | 'light' 
-  | 'moderate' 
-  | 'active' 
+export type ExerciseFrequency =
+  | 'sedentary'
+  | 'light'
+  | 'moderate'
+  | 'active'
   | 'very_active';
 
 export type StressLevel = 'low' | 'moderate' | 'high' | 'severe';
@@ -175,16 +175,16 @@ export interface DocumentAIResult {
 export interface QuestionnaireData {
   // Personal info
   age: number;
-  
+
   // Menstrual cycle
   cycleStatus: CycleStatus;
   cycleLength?: number;
   lastPeriodDate?: string;
-  
+
   // Symptoms (multi-select)
   symptoms: string[];
   symptomSeverity?: Record<string, number>; // 1-10 scale
-  
+
   // Lifestyle
   sleepHours: number;
   sleepQuality: 'poor' | 'fair' | 'good' | 'excellent';
@@ -192,16 +192,16 @@ export interface QuestionnaireData {
   exerciseTypes?: string[];
   stressLevel: StressLevel;
   dietType?: string;
-  
+
   // Health goals
   goals: string[];
-  
+
   // Medical history
   conditions?: string[];
   medications?: string[];
   supplements?: string[];
   allergies?: string[];
-  
+
   // Additional notes
   additionalInfo?: string;
 }
@@ -235,18 +235,18 @@ export interface ComprehensiveQuestionnaireData {
   ageRange: AgeRange;
   height: number; // in meters
   weight: number; // in kg
-  
+
   // Section 2: Activity & Movement
   hasDeskJob: DeskJobStatus;
   dailySteps: DailySteps;
   weeklyTrainingFrequency: TrainingFrequency;
   trainingTypes: TrainingType[];
-  
+
   // Section 3: Sleep & Recovery
   sleepHours: SleepHoursRange;
   sleepQuality: SleepQualityLevel;
   sleepRegularity: SleepRegularity;
-  
+
   // Section 4: Nutrition & Lifestyle
   balancedDiet: BalancedDiet;
   dietaryRestriction: DietaryRestriction;
@@ -254,16 +254,16 @@ export interface ComprehensiveQuestionnaireData {
   nutritionalDeficiencies: NutritionalDeficiencies;
   substanceUse: SubstanceUse;
   substanceUseFrequency?: SubstanceUseFrequency;
-  
+
   // Section 5: Stress & Mental Health
   stressLevel: StressLevelScale;
   stressReductionFrequency: StressReductionFrequency;
-  
+
   // Section 6: Hormonal & Reproductive Status
   menopauseStatus: MenopauseStatus;
   hormonalContraception?: HormonalContraception;
   pregnancyStatus: PregnancyStatus;
-  
+
   // Section 7: Goals & Expectations
   primaryGoals: PrimaryGoal[];
   resultsPreference: ResultsPreference;

@@ -19,11 +19,11 @@ test_endpoint() {
     local name=$1
     local url=$2
     local expected_status=$3
-    
+
     echo -n "Testing $name... "
-    
+
     response=$(curl -s -o /dev/null -w "%{http_code}" "$url")
-    
+
     if [ "$response" -eq "$expected_status" ]; then
         echo -e "${GREEN}✓ PASSED${NC} (HTTP $response)"
         ((PASSED++))
@@ -39,15 +39,15 @@ test_api_json() {
     local url=$2
     local method=$3
     local data=$4
-    
+
     echo -n "Testing $name... "
-    
+
     if [ "$method" = "POST" ]; then
         response=$(curl -s -X POST "$url" \
             -H "Content-Type: application/json" \
             -d "$data" \
             -w "\n%{http_code}")
-        
+
         status=$(echo "$response" | tail -n1)
         body=$(echo "$response" | head -n-1)
     else
@@ -55,7 +55,7 @@ test_api_json() {
         status=$(echo "$response" | tail -n1)
         body=$(echo "$response" | head -n-1)
     fi
-    
+
     if [ "$status" -eq 200 ]; then
         echo -e "${GREEN}✓ PASSED${NC}"
         echo "   Response: $(echo $body | jq -c '.' 2>/dev/null || echo $body | head -c 100)"

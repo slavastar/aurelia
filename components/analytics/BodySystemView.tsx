@@ -62,39 +62,39 @@ const BODY_SYSTEMS: SystemCategory[] = [
 
 const getColorClasses = (color: string) => {
   const colors: Record<string, { bg: string; text: string; border: string; icon: string }> = {
-    red: { 
-      bg: 'bg-red-500/10', 
-      text: 'text-red-200', 
+    red: {
+      bg: 'bg-red-500/10',
+      text: 'text-red-200',
       border: 'border-red-500/20',
       icon: 'text-red-400'
     },
-    yellow: { 
-      bg: 'bg-yellow-500/10', 
-      text: 'text-yellow-200', 
+    yellow: {
+      bg: 'bg-yellow-500/10',
+      text: 'text-yellow-200',
       border: 'border-yellow-500/20',
       icon: 'text-yellow-400'
     },
-    purple: { 
-      bg: 'bg-purple-500/10', 
-      text: 'text-purple-200', 
+    purple: {
+      bg: 'bg-purple-500/10',
+      text: 'text-purple-200',
       border: 'border-purple-500/20',
       icon: 'text-purple-400'
     },
-    blue: { 
-      bg: 'bg-blue-500/10', 
-      text: 'text-blue-200', 
+    blue: {
+      bg: 'bg-blue-500/10',
+      text: 'text-blue-200',
       border: 'border-blue-500/20',
       icon: 'text-blue-400'
     },
-    pink: { 
-      bg: 'bg-pink-500/10', 
-      text: 'text-pink-200', 
+    pink: {
+      bg: 'bg-pink-500/10',
+      text: 'text-pink-200',
       border: 'border-pink-500/20',
       icon: 'text-pink-400'
     },
-    green: { 
-      bg: 'bg-green-500/10', 
-      text: 'text-green-200', 
+    green: {
+      bg: 'bg-green-500/10',
+      text: 'text-green-200',
       border: 'border-green-500/20',
       icon: 'text-green-400'
     }
@@ -124,7 +124,7 @@ export default function BodySystemView({ biomarkers }: BodySystemViewProps) {
     return systemBiomarkerNames
       .map(name => {
         const biomarker = Object.entries(biomarkers).find(
-          ([key, _]) => key.toLowerCase() === name.toLowerCase() || 
+          ([key, _]) => key.toLowerCase() === name.toLowerCase() ||
                        key.toLowerCase().includes(name.toLowerCase())
         );
         return biomarker ? { name: biomarker[0], data: biomarker[1] } : null;
@@ -134,7 +134,7 @@ export default function BodySystemView({ biomarkers }: BodySystemViewProps) {
 
   const calculateSystemHealth = (systemBiomarkers: Array<{ name: string; data: Biomarker }>) => {
     if (systemBiomarkers.length === 0) return { score: 0, status: 'unknown' };
-    
+
     const statusScores: Record<string, number> = {
       optimal: 100,
       normal: 75,
@@ -143,7 +143,7 @@ export default function BodySystemView({ biomarkers }: BodySystemViewProps) {
       critical: 0
     };
 
-    const avgScore = systemBiomarkers.reduce((sum, b) => 
+    const avgScore = systemBiomarkers.reduce((sum, b) =>
       sum + (statusScores[b.data.status] || 50), 0
     ) / systemBiomarkers.length;
 

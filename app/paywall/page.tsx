@@ -28,7 +28,7 @@ export default function PaywallPage() {
 
   const handleSubscribe = async () => {
     setProcessing(true);
-    
+
     // Simulate payment processing
     setTimeout(() => {
       // In production, this would integrate with Stripe/PayPal
@@ -111,7 +111,7 @@ export default function PaywallPage() {
                 </div>
               </div>
             </div>
-            
+
             {/* Lock Overlay */}
             <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-sm rounded-lg">
               <div className="text-center">

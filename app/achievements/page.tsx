@@ -31,7 +31,7 @@ export default function AchievementsPage() {
   const loadAchievements = () => {
     const all = getAllAchievementsWithProgress();
     setAchievements(all);
-    
+
     const achievementStats = getAchievementStats();
     setStats(achievementStats);
   };
@@ -57,7 +57,7 @@ export default function AchievementsPage() {
       <div className="py-12 px-4">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             className="mb-8"

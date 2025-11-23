@@ -64,7 +64,7 @@ export default function Home() {
             />
             ?
           </h3>
-          
+
           <div className="grid md:grid-cols-3 gap-8">
             <div className="bg-white/10 backdrop-blur-md border border-white/10 p-8 rounded-2xl shadow-lg hover:bg-white/15 transition">
               <div className="w-12 h-12 bg-aurelia-lime/20 rounded-lg flex items-center justify-center mb-4">
@@ -175,11 +175,11 @@ export default function Home() {
       <footer className="container mx-auto px-4 py-8 border-t border-white/10">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
-            <Image 
-              src="/logo.svg" 
-              alt="Aurelia Logo" 
-              width={120} 
-              height={36} 
+            <Image
+              src="/logo.svg"
+              alt="Aurelia Logo"
+              width={120}
+              height={36}
               className="h-8 w-auto object-contain"
             />
           </div>

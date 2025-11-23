@@ -10,7 +10,7 @@
     --color-primary-light: #5a3d99;
     --color-secondary: #d2f878;
     --color-accent: #e2fab0;
-    
+
     /* Neutral Colors */
     --color-background: #241647;
     --color-foreground: #ffffff;
@@ -19,7 +19,7 @@
     --color-border: #342066;
     --color-input: #342066;
     --color-ring: #d2f878;
-    
+
     /* Shadcn variables mapping */
     --background: 257 52% 18%; /* #241647 converted to HSL */
     --foreground: 0 0% 100%;
@@ -40,13 +40,13 @@
     --border: 265 51% 26%;
     --input: 265 51% 26%;
     --ring: 77 89% 72%;
-    
+
     /* Health score colors */
     --color-health-excellent: #10b981;
     --color-health-good: #84cc16;
     --color-health-fair: #f59e0b;
     --color-health-poor: #ef4444;
-    
+
     --radius: 0.75rem;
   }
 }

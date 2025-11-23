@@ -178,10 +178,10 @@ export function parseBiomarkers(ocrText: string): ParsingResult {
 
     for (const pattern of patterns) {
       const match = normalizedText.match(pattern);
-      
+
       if (match && match[1]) {
         const value = parseFloat(match[1]);
-        
+
         if (!isNaN(value) && value > 0) {
           // Extract unit if present
           const unitMatch = match[0].match(/(\w+\/\w+|%|mg\/dL|ng\/mL|μg\/dL|U\/L)/i);

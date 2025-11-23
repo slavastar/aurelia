@@ -23,7 +23,7 @@ const config: Config = {
         'aurelia-purple-light': '#5a3d99',
         'aurelia-lime': '#d2f878',
         'aurelia-accent': '#e2fab0',
-        
+
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
