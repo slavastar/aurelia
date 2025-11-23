@@ -196,6 +196,33 @@
             color: #888;
         }
         
+        .rec-sources {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+            font-size: 0.9em;
+        }
+        
+        .rec-sources ul {
+            margin: 8px 0 0 0;
+            padding-left: 20px;
+        }
+        
+        .rec-sources li {
+            margin: 5px 0;
+        }
+        
+        .rec-sources a {
+            color: #667eea;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        
+        .rec-sources a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+        
         .error {
             background: #fee;
             border: 2px solid #fcc;
@@ -445,11 +472,21 @@
                 html += '<div class="recommendations"><h3>💊 Top Recommendations</h3>';
                 
                 report.recommendations.slice(0, 5).forEach((rec, index) => {
+                    let sourcesHtml = '';
+                    if (rec.sources && rec.sources.length > 0) {
+                        sourcesHtml = '<div class="rec-sources"><strong>📚 Sources:</strong><ul>';
+                        rec.sources.forEach(source => {
+                            sourcesHtml += `<li><a href="${source.url}" target="_blank" rel="noopener noreferrer">${source.title}</a></li>`;
+                        });
+                        sourcesHtml += '</ul></div>';
+                    }
+                    
                     html += `
                         <div class="rec-item">
                             <div class="rec-title">${index + 1}. ${rec.title}</div>
                             <div class="rec-action"><strong>Action:</strong> ${rec.action}</div>
                             <div class="rec-timeline">⏱️ ${rec.expected_timeline}</div>
+                            ${sourcesHtml}
                         </div>
                     `;
                 });
