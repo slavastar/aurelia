@@ -1,15 +1,22 @@
 """FastAPI server for AURELIA Health Coach."""
 
-from fastapi import FastAPI, HTTPException, File, UploadFile
+from fastapi import FastAPI, HTTPException, File, UploadFile, Form
 from fastapi.responses import JSONResponse
 from typing import Dict, Any, Optional
 import json
 from datetime import datetime
-from PIL import Image
-import torch
-from transformers import ViTImageProcessor, ViTForImageClassification
-import torch.nn.functional as F
 import io
+
+# Optional image processing imports
+try:
+    from PIL import Image
+    import torch
+    from transformers import ViTImageProcessor, ViTForImageClassification
+    import torch.nn.functional as F
+    IMAGE_PROCESSING_AVAILABLE = True
+except ImportError:
+    IMAGE_PROCESSING_AVAILABLE = False
+    print("Warning: Image processing libraries not available. Face photo analysis disabled.")
 
 from health_coach import HealthCoach
 from schemas import (
@@ -25,11 +32,19 @@ app = FastAPI(
 )
 
 # Load age prediction model at startup
-print("Loading age prediction model...")
-model_name = "nateraw/vit-age-classifier"
-processor = ViTImageProcessor.from_pretrained(model_name)
-age_model = ViTForImageClassification.from_pretrained(model_name)
-print(f"Age prediction model loaded successfully.")
+if IMAGE_PROCESSING_AVAILABLE:
+    try:
+        print("Loading age prediction model...")
+        model_name = "nateraw/vit-age-classifier"
+        processor = ViTImageProcessor.from_pretrained(model_name)
+        age_model = ViTForImageClassification.from_pretrained(model_name)
+        print(f"Age prediction model loaded successfully.")
+    except Exception as e:
+        print(f"Warning: Could not load age prediction model: {e}")
+        IMAGE_PROCESSING_AVAILABLE = False
+else:
+    processor = None
+    age_model = None
 
 
 def parse_age_range(age_label: str) -> tuple:
@@ -44,8 +59,11 @@ def parse_age_range(age_label: str) -> tuple:
         return age, age
 
 
-def predict_skin_age(image: Image.Image) -> float:
+def predict_skin_age(image) -> float:
     """Predict skin age from face photo."""
+    if not IMAGE_PROCESSING_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Image processing not available")
+    
     image = image.convert("RGB")
     inputs = processor(images=image, return_tensors="pt")
     
@@ -81,39 +99,18 @@ async def root():
 
 
 @app.post("/generate-report", response_model=Dict[str, Any])
-async def generate_report(
-    profile: HealthProfile,
-    face_photo: Optional[UploadFile] = File(None)
-):
+async def generate_report(profile: HealthProfile):
     """
     Generate a comprehensive health optimization report.
     
     Args:
         profile: User's health profile with biomarkers and lifestyle data
-        face_photo: Optional face photo for skin age estimation
         
     Returns:
         Complete health report with recommendations, supplement protocol,
         and monitoring plan
     """
     try:
-        # Process face photo if provided
-        if face_photo:
-            if not face_photo.content_type.startswith('image/'):
-                raise HTTPException(
-                    status_code=400,
-                    detail="Face photo must be an image file"
-                )
-            
-            try:
-                contents = await face_photo.read()
-                image = Image.open(io.BytesIO(contents))
-                skin_age = predict_skin_age(image)
-                profile.skin_age = skin_age
-                print(f"Estimated skin age: {skin_age} years")
-            except Exception as e:
-                print(f"Warning: Could not process face photo: {e}")
-        
         # Initialize health coach
         coach = HealthCoach()
         
@@ -169,6 +166,73 @@ async def generate_report(
             status_code=500,
             detail=f"Error generating report: {str(e)}"
         )
+
+
+@app.post("/generate-report-with-photo", response_model=Dict[str, Any])
+async def generate_report_with_photo(
+    profile_json: str = Form(...),
+    face_photo: UploadFile = File(...)
+):
+    """
+    Generate health report with facial age analysis.
+    
+    Args:
+        profile_json: JSON string of health profile
+        face_photo: Face photo for skin age estimation
+    """
+    try:
+        # Parse profile
+        profile_data = json.loads(profile_json)
+        profile = HealthProfile(**profile_data)
+        
+        # Process face photo
+        if not face_photo.content_type.startswith('image/'):
+            raise HTTPException(status_code=400, detail="Must be an image file")
+        
+        try:
+            contents = await face_photo.read()
+            if IMAGE_PROCESSING_AVAILABLE:
+                image = Image.open(io.BytesIO(contents))
+                skin_age = predict_skin_age(image)
+                profile.skin_age = skin_age
+                print(f"Estimated skin age: {skin_age} years")
+            else:
+                raise HTTPException(status_code=503, detail="Image processing unavailable")
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error processing image: {e}")
+        
+        # Generate report
+        coach = HealthCoach()
+        coach.set_health_profile(profile.model_dump())
+        report_content = coach.generate_recommendations(format="json")
+        
+        # Parse and validate
+        content = report_content.strip()
+        if content.startswith("```json"):
+            content = content[7:]
+        if content.startswith("```"):
+            content = content[3:]
+        if content.endswith("```"):
+            content = content[:-3]
+        content = content.strip()
+        
+        report_data = json.loads(content)
+        from json_adapter import adapt_model_json_to_schema
+        adapted_data = adapt_model_json_to_schema(report_data)
+        health_report = HealthReport(**adapted_data)
+        
+        response = HealthReportWithMetadata(
+            generated_at=datetime.now(),
+            health_profile=profile,
+            report=health_report
+        )
+        
+        return response.model_dump(mode='json')
+        
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=500, detail=f"JSON parsing error: {e}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error: {e}")
 
 
 @app.post("/generate-report-simple", response_model=Dict[str, str])
