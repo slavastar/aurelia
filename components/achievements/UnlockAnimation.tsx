@@ -5,14 +5,11 @@ import Confetti from 'react-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Sparkles } from 'lucide-react';
 import { Achievement } from '@/lib/achievements/definitions';
+import { UnlockedAchievement } from '@/lib/achievements/tracker';
 import AchievementBadge from './AchievementBadge';
 
 interface UnlockAnimationProps {
-  achievement: Achievement & {
-    isUnlocked: boolean;
-    unlockedAt?: Date;
-    progress?: { current: number; max: number } | null;
-  };
+  achievement: UnlockedAchievement;
   onClose: () => void;
 }
 

@@ -30,7 +30,7 @@ export default function ResultsPage() {
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [biomarkers, setBiomarkers] = useState<Biomarkers>({});
-  const [questionnaireData, setQuestionnaireData] = useState<QuestionnaireData | null>(null);
+  const [questionnaireData, setQuestionnaireData] = useState<any | null>(null);
   
   // Achievement tracking
   const {
@@ -64,7 +64,7 @@ export default function ResultsPage() {
     analyzeData(biomarkersData, questionnaireDataParsed);
   }, [router]);
 
-  const analyzeData = async (biomarkers: Biomarkers, questionnaire: QuestionnaireData) => {
+  const analyzeData = async (biomarkers: Biomarkers, questionnaire: any) => {
     try {
       // Construct cycle_status
       let cycleStatus = 'Regular';

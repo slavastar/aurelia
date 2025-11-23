@@ -210,5 +210,7 @@ export default function RecommendationsPage() {
         </motion.div>
       </div>
     </div>
+    </div>
   );
 }
+// End of component

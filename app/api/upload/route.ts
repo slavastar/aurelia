@@ -3,6 +3,9 @@ import { put } from '@vercel/blob';
 import { extractTextFromDocument } from '@/lib/pixtral/client';
 import { parseBiomarkers, validateBiomarkers } from '@/lib/pixtral/biomarker-parser';
 
+// Allow execution up to 5 minutes (if supported by hosting plan)
+export const maxDuration = 300;
+
 /**
  * Document Upload and Processing Endpoint
  * Handles file upload, OCR extraction, and biomarker parsing

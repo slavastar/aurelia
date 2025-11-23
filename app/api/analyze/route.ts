@@ -10,6 +10,9 @@ import { generateAureliaAnalysis } from '@/lib/mistral/client';
 import { generateMockRiskScore } from '@/lib/ml-model/mock-client';
 import type { AnalysisInput, AnalysisOutput } from '@/types';
 
+// Allow execution up to 5 minutes (if supported by hosting plan)
+export const maxDuration = 300;
+
 export async function POST(request: NextRequest) {
   try {
     const body: AnalysisInput = await request.json();
