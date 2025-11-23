@@ -43,7 +43,8 @@ class HealthProfile(BaseModel):
     weight: int  # kg
     bioage: float
     lifestyle_quiz: dict
-    biomarkers: dict
+    biomarkers: dict  # Can be simple dict or enriched with descriptions
+    biomarkers_with_descriptions: Optional[dict] = None  # Enriched biomarker data with units/ranges
     skin_age: Optional[float] = None  # Estimated age from face photo analysis
     metabolic_score: Optional[MetabolicScoreResult] = None  # Computed metabolic efficiency score
     inflammation_score: Optional[InflammationScoreResult] = None  # Computed inflammation/recovery score

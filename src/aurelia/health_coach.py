@@ -129,8 +129,26 @@ Your goal is to generate a comprehensive, evidence-based health optimization rep
             parts.append(f"  - {key}: {value}")
         
         parts.append("\nBLOOD TEST BIOMARKERS:")
-        for marker, value in profile.biomarkers.items():
-            parts.append(f"  - {marker}: {value}")
+        # Use enriched biomarkers if available, otherwise fall back to simple dict
+        if profile.biomarkers_with_descriptions:
+            for marker, info in profile.biomarkers_with_descriptions.items():
+                value = info.get("value", "N/A")
+                name = info.get("name", marker)
+                unit = info.get("unit", "")
+                range_val = info.get("range", "")
+                note = info.get("note", "")
+                
+                marker_line = f"  - {name}: {value}"
+                if unit:
+                    marker_line += f" {unit}"
+                if range_val:
+                    marker_line += f" (Normal: {range_val})"
+                if note:
+                    marker_line += f" - {note}"
+                parts.append(marker_line)
+        else:
+            for marker, value in profile.biomarkers.items():
+                parts.append(f"  - {marker}: {value}")
         
         return "\n".join(parts)
     

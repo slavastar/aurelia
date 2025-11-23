@@ -30,6 +30,7 @@ from .schemas import (
 from .scoring.metabolic_scores import MetabolicScore
 from .scoring.inflammation_scores import InflammationScore
 from .scoring.oxygen_scores import OxygenScore
+from .biomarker_reference import get_biomarkers_with_descriptions
 
 app = FastAPI(
     title="AURELIA Health Coach API",
@@ -117,6 +118,10 @@ async def generate_report(profile: HealthProfile):
         and monitoring plan
     """
     try:
+        # Enrich biomarkers with descriptions (only for present biomarkers)
+        enriched_biomarkers = get_biomarkers_with_descriptions(profile.biomarkers)
+        profile.biomarkers_with_descriptions = enriched_biomarkers
+        
         # Compute metabolic score if biomarkers available
         metabolic_result = MetabolicScore.compute_metabolic_score(profile.biomarkers)
         if metabolic_result:
@@ -212,6 +217,10 @@ async def generate_report_with_photo(
         # Parse profile
         profile_data = json.loads(profile_json)
         profile = HealthProfile(**profile_data)
+        
+        # Enrich biomarkers with descriptions (only for present biomarkers)
+        enriched_biomarkers = get_biomarkers_with_descriptions(profile.biomarkers)
+        profile.biomarkers_with_descriptions = enriched_biomarkers
         
         # Compute metabolic score if biomarkers available
         metabolic_result = MetabolicScore.compute_metabolic_score(profile.biomarkers)
