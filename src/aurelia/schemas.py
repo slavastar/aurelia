@@ -5,6 +5,37 @@ from typing import List, Optional, Literal
 from pydantic import BaseModel, Field
 
 
+class MetabolicScoreResult(BaseModel):
+    """Metabolic efficiency score results."""
+    score: float
+    markers_used: int
+    level: str  # optimal, good, needs_improvement
+    description: str
+    summary: str
+    components: dict
+
+
+class InflammationScoreResult(BaseModel):
+    """Inflammation and recovery score results."""
+    score: float
+    markers_used: int
+    level: str  # optimal, good, needs_improvement
+    description: str
+    summary: str
+    is_menstruating: bool  # True for premenopausal, False for postmenopausal
+    components: dict
+
+
+class OxygenScoreResult(BaseModel):
+    """Oxygen transport capacity score results."""
+    score: float
+    markers_used: int
+    level: str  # optimal, good, needs_improvement
+    description: str
+    summary: str
+    components: dict
+
+
 class HealthProfile(BaseModel):
     """Health profile with biomarkers and lifestyle data."""
     age: int
@@ -14,6 +45,10 @@ class HealthProfile(BaseModel):
     lifestyle_quiz: dict
     biomarkers: dict
     skin_age: Optional[float] = None  # Estimated age from face photo analysis
+    metabolic_score: Optional[MetabolicScoreResult] = None  # Computed metabolic efficiency score
+    inflammation_score: Optional[InflammationScoreResult] = None  # Computed inflammation/recovery score
+    oxygen_score: Optional[OxygenScoreResult] = None  # Computed oxygen transport capacity score
+    is_menstruating: Optional[bool] = None  # For inflammation score calculation
 
 
 
@@ -32,16 +67,6 @@ class Recommendation(BaseModel):
     action: str
     rationale: str
     expected_timeline: str
-    sources: List[Source] = Field(default_factory=list)
-
-
-class Supplement(BaseModel):
-    """Supplement protocol entry."""
-    supplement: str
-    dosage: str
-    frequency: str
-    rationale: str
-    target_biomarkers: List[str]
     sources: List[Source] = Field(default_factory=list)
 
 
@@ -94,7 +119,6 @@ class HealthReport(BaseModel):
     """Complete health optimization report."""
     health_assessment: HealthAssessment
     recommendations: List[Recommendation]
-    supplement_protocol: List[Supplement]
     lifestyle_interventions: LifestyleInterventions
     monitoring_plan: MonitoringPlan
 
